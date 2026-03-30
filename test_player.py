@@ -8,9 +8,9 @@ from providers.transfermarkt.client import TransfermarktClient
 client = TransfermarktClient()
 
 
-# url_porfile = "https://www.transfermarkt.com/lamine-yamal/profil/spieler/937958"
-# df_player_profile_info = client.player.extract_profile_info(url_porfile)
-# print(df_player_profile_info)
+url_porfile = "https://www.transfermarkt.com/lamine-yamal/profil/spieler/937958"
+df_player_profile_info = client.player.extract_profile_info(url_porfile)
+print(df_player_profile_info)
 
 
 # url_current_season_player = "https://www.transfermarkt.com/lamine-yamal/leistungsdaten/spieler/937958/saison/2025/plus/1#gesamt"
@@ -18,16 +18,12 @@ client = TransfermarktClient()
 # print(stats['LaLiga'])
 
 # url_stats_player_all_seasons = "https://www.transfermarkt.com/lamine-yamal/leistungsdatendetails/spieler/937958/saison//verein/0/liga/0/wettbewerb//pos/0/trainer_id/0/plus/1"
-
 # df = client.player.extract_player_all_seasons_stats(url_stats_player_all_seasons)
-
 # print(df)
 
 
 # url_stats_by_competition_player= "https://www.transfermarkt.com/lamine-yamal/detaillierteleistungsdaten/spieler/937958/plus/1"
-
 # stats = client.player.get_stats_by_competition(url_stats_by_competition_player)
-
 # for k, df in stats.items():
 #     print(f"\n=== {k} ===")
 #     print(df.head())
@@ -44,7 +40,6 @@ client = TransfermarktClient()
 
 # url_stats_by_coach = "https://www.transfermarkt.com/lamine-yamal/leistungsdatentrainer/spieler/937958/plus/1"
 # df_stats_by_coach_player = client.player.extract_stats_by_coach(url_stats_by_coach)
-
 # print(df_stats_by_coach_player)
 
 
@@ -62,7 +57,6 @@ client = TransfermarktClient()
 
 # # Ejemplo para un jugador de campo
 # df_penalties_scored_player, df_penalties_missed_player =client.player.extract_penalty_goals(url_penalty_goals_player, is_goalkeeper=False)
-
 # print(df_penalties_saved)
 # print(df_nonsaved_penalties)
 # print(df_penalties_scored_player)
@@ -92,30 +86,24 @@ client = TransfermarktClient()
 # print(df_mkt_value_overtime_player)
 
 
-url_transfer_history= "https://www.transfermarkt.com/lamine-yamal/transfers/spieler/937958"
-df_transfer_history_player = client.player.extract_transfer_history(url_transfer_history)
-print(df_transfer_history_player)
-
-#-----------------------HASTA AQUI TODO CORRECTO---------------------------------
+# url_transfer_history= "https://www.transfermarkt.com/lamine-yamal/transfers/spieler/937958"
+# df_transfer_history_player = client.player.extract_transfer_history(url_transfer_history)
+# print(df_transfer_history_player)
 
 
 # url_national_team_player= "https://www.transfermarkt.com/lamine-yamal/nationalmannschaft/spieler/937958/verein_id/3375/hauptwettbewerb//wettbewerb_id//start/2023-09-08/ende/2026-03-01/nurEinsatz/0/plus/1"
 # df_national = client.player.extract_national_team_stats(url_national_team_player)
-
 # print(df_national)
 
 # url_player_archievements= "https://www.transfermarkt.com/joan-garcia/erfolge/spieler/561613"
-
-# df_player_achievements= client.player.extract_player_achievements_transfermarkt(url_player_archievements)
+# df_player_achievements= client.player.extract_player_achievements(url_player_archievements)
 # print(df_player_achievements)
 
 # url_debuts_apearances = "https://www.transfermarkt.com/lamine-yamal/debuets/spieler/937958"
-
 # df_debut_appearances_player= client.player.extract_debut_appearances(url_debuts_apearances)
 # print(df_debut_appearances_player)
 
 # url_scoring_debuts = "https://www.transfermarkt.com/lamine-yamal/tordebuets/spieler/937958"
-
 # df_scoring_debuts = client.player.extract_scoring_debuts(url_scoring_debuts)
 # print(df_scoring_debuts)
 
@@ -128,7 +116,6 @@ print(df_transfer_history_player)
 # print(df_greatest_losses_player)
 
 # url_most_goal_in_one_match= "https://www.transfermarkt.com/lamine-yamal/meistetore/spieler/937958"
-
 # df_most_goals_in_one_match= client.player.extract_most_goals_in_one_match(url_most_goal_in_one_match)
 # print(df_most_goals_in_one_match)
 

@@ -5,11 +5,12 @@ import requests
 import time
 import numpy as np
 from providers.transfermarkt.constants import DEFAULT_HEADERS
-from providers.transfermarkt.utils import extract_text, extract_other_positions, get_img_src, parse_int, parse_minutes,parse_general_stats_player, parse_competition_match_stats_player, extract_all_player_stats, get_soup_selenium, extract_stats_by_competition, extract_stats_by_club, get_total_pages, extract_data_from_page
+from providers.transfermarkt.utils import extract_text, extract_other_positions, get_img_src, parse_int, parse_minutes,parse_general_stats_player, parse_competition_match_stats_player, extract_all_player_stats, get_soup_selenium, extract_stats_by_competition, extract_stats_by_club, get_total_pages, extract_data_from_page, parse_squad_number_table
+
 class TransfermarktPlayerScraper:
-    def __init__(self, headers=None):
+    def __init__(self, session, headers=None):
+        self.session = session
         self.headers = headers if headers else DEFAULT_HEADERS
-        self.session = requests.Session()
     
     
     def extract_profile_info(self, url:str)-> pd.DataFrame:
@@ -1141,9 +1142,7 @@ class TransfermarktPlayerScraper:
         ----------
         url : str
             The URL of the Transfermarkt player page containing the 'All titles' section.
-        headers : dict
-            HTTP headers (including User-Agent) required for the HTTP request.
-
+      
         Returns
         -------
         pd.DataFrame
@@ -1215,7 +1214,9 @@ class TransfermarktPlayerScraper:
         except Exception as e:
             print(f"[ERROR] Unexpected parsing error for {url} -> {e}")
             return pd.DataFrame()
-    
+
+#------------------------------------------------------------------------------------------------------------------------
+
     def extract_debut_appearances(self, url: str) -> pd.DataFrame:
         """
         Extract debut appearance data for a player from Transfermarkt.
@@ -1303,7 +1304,8 @@ class TransfermarktPlayerScraper:
             print(f"[ERROR] Unexpected parsing error for {url} -> {e}")
             return pd.DataFrame()
     
-    
+#------------------------------------------------------------------------------------------------------------------------
+ 
     def extract_scoring_debuts(self, url: str) -> pd.DataFrame:
         """
         Extract scoring debut data for a player from Transfermarkt.
@@ -1312,8 +1314,6 @@ class TransfermarktPlayerScraper:
         ----------
         url : str
             Transfermarkt player scoring debut URL.
-        headers : dict
-            HTTP headers (User-Agent required).
 
         Returns
         -------
@@ -1401,7 +1401,9 @@ class TransfermarktPlayerScraper:
         except Exception as e:
             print(f"[ERROR] Unexpected parsing error for {url} -> {e}")
             return pd.DataFrame()
-        
+
+#------------------------------------------------------------------------------------------------------------------------
+
     def extract_greatest_wins(self, url: str) -> pd.DataFrame:
         """
         Extract scoring debut data for a player from Transfermarkt.
@@ -1410,9 +1412,7 @@ class TransfermarktPlayerScraper:
         ----------
         url : str
             Transfermarkt player scoring debut URL.
-        headers : dict
-            HTTP headers (User-Agent required).
-
+    
         Returns
         -------
         pd.DataFrame
@@ -1501,7 +1501,9 @@ class TransfermarktPlayerScraper:
         except Exception as e:
             print(f"[ERROR] Unexpected parsing error for {url} -> {e}")
             return pd.DataFrame()
-    
+
+#------------------------------------------------------------------------------------------------------------------------
+
     def extract_heaviest_losses(self, url: str) -> pd.DataFrame:
         """
         Extract scoring debut data for a player from Transfermarkt.
@@ -1597,7 +1599,9 @@ class TransfermarktPlayerScraper:
         except Exception as e:
             print(f"[ERROR] Unexpected parsing error for {url} -> {e}")
             return pd.DataFrame()
-    
+
+#------------------------------------------------------------------------------------------------------------------------
+
     def extract_most_goals_in_one_match(self, url: str) -> pd.DataFrame:
         """
         Extract match contribution data (goals, assists, minutes played) for a player from Transfermarkt.
@@ -1610,8 +1614,6 @@ class TransfermarktPlayerScraper:
         ----------
         url : str
             The URL of the Transfermarkt player page containing the match contribution data.
-        headers : dict
-            HTTP headers, including User-Agent (required).
 
         Returns
         -------
@@ -1704,6 +1706,9 @@ class TransfermarktPlayerScraper:
         except Exception as e:
             print(f"[ERROR] Unexpected parsing error for {url} -> {e}")
             return pd.DataFrame()
+
+#------------------------------------------------------------------------------------------------------------------------
+
     def extract_most_goalassists_in_one_match(self, url: str) -> pd.DataFrame:
         """
         Extract match contribution data (goals, assists) for a player from Transfermarkt.
@@ -1717,8 +1722,6 @@ class TransfermarktPlayerScraper:
         ----------
         url : str
             The URL of the Transfermarkt player page containing the match contribution data.
-        headers : dict
-            HTTP headers, including User-Agent (required).
 
         Returns
         -------
@@ -1812,52 +1815,7 @@ class TransfermarktPlayerScraper:
             print(f"[ERROR] Unexpected parsing error for {url} -> {e}")
             return pd.DataFrame()
 
-    def parse_squad_number_table(self, table) -> pd.DataFrame:
-        """
-        Parse a Transfermarkt squad number table to extract player squad details.
-
-        Parameters
-        ----------
-        table : bs4.element.Tag
-            A BeautifulSoup table element containing the squad number data.
-
-        Returns
-        -------
-        pd.DataFrame
-            A DataFrame with the parsed squad number data, including season, team,
-            team logo, and jersey number.
-        
-        Raises
-        ------
-        ValueError
-            If the table is malformed and does not contain enough columns for parsing.
-        """
-        tbody = table.find("tbody")
-        rows = tbody.find_all("tr", recursive=False) if tbody else []
-
-        records = []
-
-        for row in rows:
-            cells = row.find_all("td", recursive=False)
-            if len(cells) < 4:
-                continue
-
-            season = cells[0].get_text(strip=True)
-
-            logo_tag = cells[1].find("img")
-            team_tag = cells[2].find("a")
-
-            jersey_number = cells[-1].get_text(strip=True)
-
-            records.append({
-                "season": season,
-                "team": team_tag.get_text(strip=True) if team_tag else None,
-                "team_logo": logo_tag["src"] if logo_tag else None,
-                "jersey_number": int(jersey_number) if jersey_number.isdigit() else None
-            })
-
-        return pd.DataFrame(records)
-
+#------------------------------------------------------------------------------------------------------------------------
 
     def extract_squad_number_history_and_national_team(self, url: str):
         """
@@ -1867,8 +1825,6 @@ class TransfermarktPlayerScraper:
         ----------
         url : str
             The URL of the Transfermarkt player page containing squad number history.
-        headers : dict, optional
-            HTTP headers, including User-Agent (default is `HEADERS`).
 
         Returns
         -------
@@ -1897,8 +1853,8 @@ class TransfermarktPlayerScraper:
             if len(tables) < 2:
                 raise ValueError("Expected at least 2 squad number tables")
 
-            df_squad_number_team = self.parse_squad_number_table(tables[0])
-            df_squad_number_national_team = self.parse_squad_number_table(tables[1])
+            df_squad_number_team = parse_squad_number_table(tables[0])
+            df_squad_number_national_team = parse_squad_number_table(tables[1])
 
             return df_squad_number_team, df_squad_number_national_team
 
@@ -1913,7 +1869,9 @@ class TransfermarktPlayerScraper:
         except Exception as e:
             print(f"[ERROR] Unexpected parsing error for {url} -> {e}")
             return None, None
-    
+
+#------------------------------------------------------------------------------------------------------------------------
+
     def extract_games_played_together(self, url:str)-> pd.DataFrame:
         """
             Extract data about games played together by a player from Transfermarkt.
@@ -1922,8 +1880,6 @@ class TransfermarktPlayerScraper:
             ----------
             url : str
                 The URL of the Transfermarkt player page that contains the games played together data.
-            headers : dict, optional
-                HTTP headers (User-Agent required, default is `HEADERS`).
 
             Returns
             -------
@@ -2013,6 +1969,8 @@ class TransfermarktPlayerScraper:
             print(f"[ERROR] Unexpected error during parsing or data extraction for {url} -> {e}")
             return pd.DataFrame()
     
+#------------------------------------------------------------------------------------------------------------------------
+
     def extract_games_against_player(self,url: str) -> pd.DataFrame:
         """
         Extract data about games played against a player from Transfermarkt.
@@ -2021,8 +1979,6 @@ class TransfermarktPlayerScraper:
         ----------
         url : str
             The URL of the Transfermarkt player page containing the games played against data.
-        headers : dict, optional
-            HTTP headers (User-Agent required, default is `HEADERS`).
 
         Returns
         -------

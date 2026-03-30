@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
@@ -13,6 +14,272 @@ def extract_competition_id(url: str) -> str:
     if "/wettbewerb/" in url:
         return url.split("/wettbewerb/")[1].split("/")[0].split("?")[0]
     return None
+
+#---------------------------TEAM------------------------------------------------
+def extract_signed_from(td):
+            """Extract 'signed from' info: team name, logo, and URL."""
+            team_img = td.find("img")
+            team_link = td.find("a")
+
+            return {
+                "signed_from":  team_img.get("alt", "").strip() if team_img else None,
+                "signed_from_url": f"https://www.transfermarkt.com{team_link['href']}" if team_link and team_link.get("href") else None,
+                "signed_from_logo": team_img.get("src") if team_img else None
+            }
+
+def extract_bg_color(style):
+    """Extrae el color de fondo de un atributo style"""
+    if not style:
+        return None
+    m = re.search(r'background-color\s*:\s*(#[0-9a-fA-F]{6})', style)
+    return m.group(1).lower() if m else None
+
+def extract_qualification_legend(soup):
+    """Crea un diccionario color -> leyenda"""
+    legend = {}
+    for span in soup.select("span.farbmarkierung-legende"):
+        color = extract_bg_color(span.get("style"))
+        if color:
+            legend[color] = span.get_text(strip=True)
+    return legend
+
+def parse_general_table(table, league, season, qualification_legend):
+    rows = []
+    for tr in table.tbody.find_all("tr", recursive=False):
+        tds = tr.find_all("td", recursive=False)
+        if len(tds) < 10:  # filas válidas
+            continue
+
+        logo = tds[1].find("img")
+
+        club_link = tds[2].find("a", href=True)
+        goals_for, goals_against = map(int, tds[7].get_text(strip=True).split(":"))
+
+        rows.append({
+            "league": league,
+            "season": season,
+            "position": int(tds[0].get_text(strip=True).split()[0]),
+            "club": club_link.get_text(strip=True),
+            "club_url": "https://www.transfermarkt.com" + club_link["href"],
+            "club_logo": logo["src"] if logo else None,
+            "matches": int(tds[3].get_text(strip=True)),
+            "wins": int(tds[4].get_text(strip=True)),
+            "draws": int(tds[5].get_text(strip=True)),
+            "losses": int(tds[6].get_text(strip=True)),
+            "goals_for": goals_for,
+            "goals_against": goals_against,
+            "goal_diff": int(tds[8].get_text(strip=True)),
+            "points": int(tds[9].get_text(strip=True)),
+            "qualification_color": extract_bg_color(tds[0].get("style")),
+            "qualification": qualification_legend.get(extract_bg_color(tds[0].get("style")))
+        })
+    return pd.DataFrame(rows)
+
+def parse_home_away_table(table, league, season, qualification_legend):
+    rows = []
+    for tr in table.tbody.find_all("tr", recursive=False):
+        tds = tr.find_all("td", recursive=False)
+        if len(tds) < 6:
+            continue
+
+        logo = tds[1].find("img")
+        club_link = tds[2].find("a", href=True)
+
+        # Extraer GF:GA y puntos de forma flexible
+        goals_for = goals_against = points = None
+        for td in tds[6:]:
+            text = td.get_text(strip=True)
+            if ":" in text:
+                goals_for, goals_against = map(int, text.split(":"))
+            elif text.isdigit():
+                points = int(text)
+
+        rows.append({
+            "league": league,
+            "season": season,
+            "position": int(tds[0].get_text(strip=True).split()[0]),
+            "club": club_link.get_text(strip=True),
+            "club_url": "https://www.transfermarkt.com" + club_link["href"],
+            "club_logo": logo["src"] if logo else None,
+            "wins": int(tds[3].get_text(strip=True)),
+            "draws": int(tds[4].get_text(strip=True)),
+            "losses":  int(tds[5].get_text(strip=True)),
+            "goals_for": goals_for,
+            "goals_against": goals_against,
+            "goal_diff": goals_for - goals_against if goals_for is not None and goals_against is not None else None,
+            "points": points,
+            "qualification_color":  extract_bg_color(tds[0].get("style")),
+            "qualification": qualification_legend.get( extract_bg_color(tds[0].get("style")))
+        })
+    return pd.DataFrame(rows)
+
+
+def extract_transfer_record_current_next_sesion_transfers(soup: BeautifulSoup) -> pd.DataFrame:
+    """
+    Extracts the transfer record summary (income, expenditure, overall balance) 
+    from a Transfermarkt team transfer page.
+
+    Parameters
+    ----------
+    soup : BeautifulSoup
+        Parsed HTML content of the transfer page.
+
+    Returns
+    -------
+    pd.DataFrame
+        A dataframe containing:
+        - income_count: number of incoming transfers
+        - income_value: total income value
+        - expenditure_count: number of outgoing transfers
+        - expenditure_value: total expenditure value
+        - overall_balance: net balance from transfers
+    """
+    box = soup.find("div", class_="transfer-record")
+    rows = box.find_all("tr")
+
+    data = {}
+
+    for row in rows:
+        text = row.get_text(" ", strip=True)
+
+        if "Income" in text:
+            cols = row.find_all("td")
+            data["income_count"] = cols[1].text.strip()
+            data["income_value"] = cols[2].get_text(" ", strip=True)
+
+        elif "Expenditure" in text:
+            cols = row.find_all("td")
+            data["expenditure_count"] = cols[1].text.strip()
+            data["expenditure_value"] = cols[2].get_text(" ", strip=True)
+
+        elif "Overall balance" in text:
+            data["overall_balance"] = row.find("td", class_="transfer-record__total").get_text(" ", strip=True)
+
+    return pd.DataFrame([data])
+
+def extract_players_table_current_next_sesion_transfers(table , arrivals: bool = True) -> pd.DataFrame:
+    """
+    Extracts detailed player transfer information from a Transfermarkt transfers table.
+
+    Parameters
+    ----------
+    table : bs4.element.Tag
+        BeautifulSoup tag of the transfer table (arrivals or departures).
+    arrivals : bool, optional
+        If True, extracts incoming transfers; if False, extracts outgoing transfers.
+
+    Returns
+    -------
+    pd.DataFrame
+        A dataframe containing for each player:
+        - player: player name
+        - player_url: URL to player's Transfermarkt page
+        - player_photo: URL to player's photo
+        - position: player position
+        - age: player age
+        - market_value: current market value
+        - nation: nationality
+        - nation_photo: flag image URL
+        - left_team / joined_team: club leaving / joining
+        - left_team_url / joined_team_url: URL of the club
+        - left_team_photo / joined_team_photo: club logo
+        - left_league / joined_league: league name
+        - left_league_url / joined_league_url: league page URL
+        - left_league_photo / joined_league_photo: league flag
+        - fee: transfer fee
+    """
+    rows = table.find("tbody").find_all("tr", recursive=False)
+    all_data = []
+
+    for row in rows:
+        cols = row.find_all("td", recursive=False)
+
+        # Player
+        player_link_tag = cols[1].select_one("td.hauptlink a")
+        player_img_tag = cols[1].find("img")
+
+        # Posición
+        position_rows = cols[1].find_all("tr")
+
+        # Nation
+        nationality_imgs = cols[4].find_all("img")
+
+        # Club anterior
+        club_cell = cols[5]
+
+        club_link_tag = club_cell.select_one("td.hauptlink a")
+        club_img_tag = club_cell.find("img", class_="tiny_wappen")
+
+        # Liga
+        league_link_tag = club_cell.find_all("a")[-1] if len(club_cell.find_all("a")) > 1 else None
+
+        league_flag_img = club_cell.find_all("img")[-1] if len(club_cell.find_all("img")) > 1 else None
+        if arrivals==True:
+            all_data.append({
+                "player": player_link_tag.text.strip() if player_link_tag else None,
+                "player_url": "https://www.transfermarkt.com" + player_link_tag["href"] if player_link_tag else None,
+                "player_photo": player_img_tag["data-src"] if player_img_tag else None,
+                "position": position_rows[1].text.strip() if len(position_rows) > 1 else None,
+                "age": cols[2].text.strip(),
+                "market_value":  cols[3].text.strip(),
+                "nation": [img.get("title") for img in nationality_imgs][0],
+                "nation_photo": [img.get("src") for img in nationality_imgs][0],
+                "left_team": club_link_tag.text.strip() if club_link_tag else None,
+                "left_team_url": "https://www.transfermarkt.com" + club_link_tag["href"] if club_link_tag else None,
+                "left_team_photo": club_img_tag["src"] if club_img_tag else None,
+                "left_league": league_link_tag.text.strip() if league_link_tag else None,
+                "left_league_url": "https://www.transfermarkt.com" + league_link_tag["href"] if league_link_tag else None,
+                "left_league_photo": league_flag_img["src"] if league_flag_img else None,
+                "fee": cols[6].get_text(" ", strip=True)
+            })
+        else:
+            all_data.append({
+                "player": player_link_tag.text.strip() if player_link_tag else None,
+                "player_url": "https://www.transfermarkt.com" + player_link_tag["href"] if player_link_tag else None,
+                "player_photo": player_img_tag["data-src"] if player_img_tag else None,
+                "position": position_rows[1].text.strip() if len(position_rows) > 1 else None,
+                "age": cols[2].text.strip(),
+                "market_value":  cols[3].text.strip(),
+                "nation": [img.get("title") for img in nationality_imgs][0],
+                "nation_photo": [img.get("src") for img in nationality_imgs][0],
+                "joined_team": club_link_tag.text.strip() if club_link_tag else None,
+                "joined_team_url": "https://www.transfermarkt.com" + club_link_tag["href"] if club_link_tag else None,
+                "joined_team_photo": club_img_tag["src"] if club_img_tag else None,
+                "joined_league": league_link_tag.text.strip() if league_link_tag else None,
+                "joined_league_url": "https://www.transfermarkt.com" + league_link_tag["href"] if league_link_tag else None,
+                "joined_league_photo": league_flag_img["src"] if league_flag_img else None,
+                "fee": cols[6].get_text(" ", strip=True)
+            })
+
+
+    return pd.DataFrame(all_data)
+
+def extract_summary_current_next_sesion_transfers(table) -> pd.DataFrame:
+    """
+    Extracts summary information from a Transfermarkt table footer (tfoot).
+
+    Parameters
+    ----------
+    table : bs4.element.Tag
+        BeautifulSoup table element for arrivals or departures.
+
+    Returns
+    -------
+    pd.DataFrame
+        A dataframe with key-value pairs extracted from the table footer, 
+        e.g., total fees, number of players, or other statistics.
+    """
+    tfoot = table.find("tfoot")
+    data = {}
+
+    if tfoot:
+        for td in tfoot.find_all("td"):
+            text = td.get_text(" ", strip=True)
+            key, value = text.split(":", 1)
+            key_clean = key.strip().lower().replace(" ", "_")
+            data[key_clean] = value.strip()
+
+    return pd.DataFrame([data])
 
 #---------------------------PLAYER------------------------------------------------
 # Function to extract data from a span or return default value if not found
@@ -478,3 +745,50 @@ def extract_data_from_page(url, page, box_index, is_goalkeeper=False ):
                 })
     
     return all_data
+
+
+def parse_squad_number_table(table) -> pd.DataFrame:
+        """
+        Parse a Transfermarkt squad number table to extract player squad details.
+
+        Parameters
+        ----------
+        table : bs4.element.Tag
+            A BeautifulSoup table element containing the squad number data.
+
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame with the parsed squad number data, including season, team,
+            team logo, and jersey number.
+        
+        Raises
+        ------
+        ValueError
+            If the table is malformed and does not contain enough columns for parsing.
+        """
+        tbody = table.find("tbody")
+        rows = tbody.find_all("tr", recursive=False) if tbody else []
+
+        records = []
+
+        for row in rows:
+            cells = row.find_all("td", recursive=False)
+            if len(cells) < 4:
+                continue
+
+            season = cells[0].get_text(strip=True)
+
+            logo_tag = cells[1].find("img")
+            team_tag = cells[2].find("a")
+
+            jersey_number = cells[-1].get_text(strip=True)
+
+            records.append({
+                "season": season,
+                "team": team_tag.get_text(strip=True) if team_tag else None,
+                "team_logo": logo_tag["src"] if logo_tag else None,
+                "jersey_number": int(jersey_number) if jersey_number.isdigit() else None
+            })
+
+        return pd.DataFrame(records)
