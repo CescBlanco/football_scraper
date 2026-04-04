@@ -153,3 +153,68 @@ client.competition.fetch_all(COMPETITIONS_URL)
 # df_attendance = client.team.extract_attendance_team(url_attendance)
 # print(df_attendance)
 
+# url_historical = "https://www.transfermarkt.com/fc-barcelona/platzierungen/verein/131"
+# df_historical_standings = client.team.extract_historical_standings(url_historical)
+# print(df_historical_standings)
+
+# url_cups_history = "https://www.transfermarkt.com/fc-barcelona/pokalhistorie/verein/131#google_vignette"
+# df_cup_history = client.team.extract_cup_history(url_cups_history)
+# print(df_cup_history)
+
+# url_record_against= "https://www.transfermarkt.com/fc-barcelona/bilanz/verein/131/saison_id//wettbewerb_id//datum_von/0000-00-00/datum_bis/0000-00-00/land_id/0/group/1/day/0/clubs_in_comp_id//plus/1"
+# df_record_against = client.team.extract_record_against(url_record_against)
+# print(df_record_against)
+
+# url_record_players = "https://www.transfermarkt.com/fc-barcelona/rekordspieler/verein/131/wettbewerb_id/alle/position/alle/aktive/alle/detailposition/alle/plus/1"
+# df_record_players = client.team.extract_record_players(url_record_players)
+# print(df_record_players)
+
+
+
+#NOOOO FUNCIONA 
+url_top_scores = "https://www.transfermarkt.com/fc-barcelona/toptorschuetzen/verein/131/wettbewerb_id/alle/position/alle/detailposition/alle/plus/1"
+df_top_scorers = client.team.extract_top_scorers(url_top_scores)
+print(df_top_scorers)
+
+
+
+# url_top_scores_byseason= "https://www.transfermarkt.com/fc-barcelona/toptorschuetzensaison/verein/131/wettbewerb_id//pos//plus/1"
+# df_top_scores_by_season = client.team.extract_top_scores_by_season(url_top_scores_byseason)  
+# print(df_top_scores_by_season)
+
+# url_most_value_players ="https://www.transfermarkt.com/fc-barcelona/wertvollsteSpielerVereinshistorie/verein/131/plus/1"
+# df_most_value_players = client.team.extract_most_value_players(url_most_value_players)
+# print(df_most_value_players)
+
+# url_foreign_players = "https://www.transfermarkt.com/fc-barcelona/gastarbeiter/verein/131/plus/1"
+# df_foreign_players = client.team.extract_foreign_players(url_foreign_players)
+# print(df_foreign_players)
+
+# url_debut_young_old_players = "https://www.transfermarkt.com/fc-barcelona/juengsteAelteste/verein/131/saisonIdVon/1901/saisonIdBis/2025/wettbewerb_id/gesamt/plus/1#jung"
+# df_debut_youngest, df_debut_oldest = client.team.extract_debut_young_old_players(url_debut_young_old_players)
+# print(df_debut_youngest)
+# print(df_debut_oldest)
+
+# url_where_ex_players="https://www.transfermarkt.com/fc-barcelona/weristwo/verein/131/plus/1"
+# df_where_ex_players = client.team.extract_where_ex_players(url_where_ex_players)
+# print(df_where_ex_players)
+
+# url_returnes_players = "https://www.transfermarkt.com/fc-barcelona/rueckkehrer/verein/131/plus/1"
+# df_returned_players = client.team.extract_returned_players(url_returnes_players)
+# print(df_returned_players)
+
+# url_coaches= "https://www.transfermarkt.com/fc-barcelona/mitarbeiterhistorie/verein/131/personalie_id/0/plus/1"
+# df_staff = client.team.extract_staff_history(url_coaches)
+# print(df_staff)
+
+# url_referee_statistics= "https://www.transfermarkt.com/fc-barcelona/schiedsrichter/verein/131/reldata/&2025"
+# df_referee_statistics = client.team.extract_referee_statistics(url_referee_statistics)
+# print(df_referee_statistics)
+
+# url_penalty_stadistics = "https://www.transfermarkt.com/fc-barcelona/elfmeterstatistik/verein/131/reldata/%262025/plus/1"
+# df_penalty_statistics = client.team.extract_penalty_statistics(url_penalty_stadistics)
+# print(df_penalty_statistics)
+
+# url_penalty_shootouts= "https://www.transfermarkt.com/fc-barcelona/elfmeterschiessen/verein/131/haupt_wettbewerb_id//plus/1"
+# df_penalty_shootouts = client.team.extract_penalty_shootouts(url_penalty_shootouts)
+# print(df_penalty_shootouts)

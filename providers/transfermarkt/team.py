@@ -13,7 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 
 from providers.transfermarkt.constants import DEFAULT_HEADERS
-from providers.transfermarkt.utils import  extract_signed_from, extract_qualification_legend, parse_general_table, parse_home_away_table, extract_transfer_record_current_next_sesion_transfers, extract_players_table_current_next_sesion_transfers, extract_summary_current_next_sesion_transfers
+from providers.transfermarkt.utils import  extract_signed_from, extract_qualification_legend, parse_general_table, parse_home_away_table, extract_transfer_record_current_next_sesion_transfers, extract_players_table_current_next_sesion_transfers, extract_summary_current_next_sesion_transfers, safe_int,parse_group_stage_opponents, parse_knockout_opponents, extract_legs_from_row_with_url 
 
 class TransfermarktTeamScraper:
     def __init__(self, session, competition_service, headers=None):
@@ -2188,4 +2188,1169 @@ class TransfermarktTeamScraper:
 
         return pd.DataFrame(all_data)
 
+    def extract_historical_standings(self, url: str) -> pd.DataFrame:
+        """
+        Scrape historical league standings from Transfermarkt.
+
+        Extracts season, league info, tier, matches, wins, draws, goals, points, position, and coach.
+
+        Args:
+            url (str): Transfermarkt URL of the historical standings page.
+    
+
+        Returns:
+            pd.DataFrame: DataFrame containing historical standings.
+        """
+
+        
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        table = soup.select_one("table.items")
+        if not table:
+            raise ValueError("Table not found")
+
+        rows = table.select("tbody tr")
+
+        data = []
+
+        for row in rows:
+            cols = [td.get_text(strip=True) for td in row.find_all("td")]
+            if len(cols) < 10:
+                continue
+
+            # Detect goals column automatically
+            goals_col = next((c for c in cols if ":" in c), None)
+
+            goals_for, goals_against = (goals_col.split(":") if goals_col else (None, None))
+
+            league_tag = row.select_one("td.hauptlink a")
+            coach_tag = row.select("td a")[-1] if row.select("td a") else None
+
+            data.append({
+                "season": cols[0],
+                "league": league_tag.get_text(strip=True) if league_tag else None,
+                "league_url": "https://www.transfermarkt.com"  + league_tag["href"] if league_tag else None,
+                "league_photo": row.find("img")["src"] if row.find("img") else None,
+                "tier": cols[3] if len(cols) > 3 else None,
+                "matches": safe_int(cols[4]) if len(cols) > 4 else None,
+                "wins": safe_int(cols[5]) if len(cols) > 5 else None,
+                "draws": safe_int(cols[6]) if len(cols) > 6 else None,
+                "goals_for": safe_int(goals_for),
+                "goals_against": safe_int(goals_against),
+                "goal_difference": safe_int(cols[-4]),
+                "points": safe_int(cols[-3]),
+                "position": safe_int(cols[-2]),
+                "coach": coach_tag.get_text(strip=True) if coach_tag else None,
+            })
+
+        return pd.DataFrame(data)
+
+    def extract_cup_history(self, url: str) -> pd.DataFrame:
+        """
+        Extract cup history from a Transfermarkt team or player page.
+
+        Args:
+            url (str): URL to the cup history page.
+
+
+        Returns:
+            pd.DataFrame: DataFrame containing cup history.
+        """
+
+       
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        container = soup.select_one("div.responsive-table")
+
+        if not container:
+            raise ValueError("Cup history table not found")
+
+        data = []
+
+        current_competition = None
+        current_competition_url = None
+        current_competition_logo = None
+
+        for row in container.find_all("tr"):
+
+            classes = row.get("class", [])
+            if "bg_blau_20" in classes and "hauptlink" in classes:
+                img_tag = row.find("img")
+                link_tag = row.find("a")
+
+                current_competition = link_tag.get_text(strip=True) if link_tag else None
+                current_competition_url = "https://www.transfermarkt.com" + link_tag["href"] if link_tag else None
+                current_competition_logo = img_tag["src"] if img_tag else None
+                continue
+
+            cols = row.find_all("td")
+            if len(cols) < 3:
+                continue
+        
+            season_tag = cols[0].find("a")
+
+            is_group_stage = cols[2].get("colspan") is not None
+
+            if is_group_stage:
+                opponents, opponent_urls = parse_group_stage_opponents(cols[2])
+                first_leg = first_leg_url = second_leg = second_leg_url = None
+            else:
+                opponents, opponent_urls = parse_knockout_opponents(cols[2])
+                first_leg, first_leg_url, second_leg, second_leg_url = extract_legs_from_row_with_url(row)
+
+            data.append({
+                "competition": current_competition,
+                "competition_url": current_competition_url,
+                "competition_photo": current_competition_logo,
+                "season": season_tag.get_text(strip=True) if season_tag else None,
+                "season_url": "https://www.transfermarkt.com" + season_tag["href"] if season_tag else None,
+                "round_achieved": cols[1].get_text(strip=True),
+                "opponents": ", ".join(opponents) if opponents else None,
+                "opponent_urls": opponent_urls,
+                "first_leg": first_leg,
+                "first_leg_url": first_leg_url,
+                "second_leg": second_leg,
+                "second_leg_url": second_leg_url
+            })
+
+        return pd.DataFrame(data)
+    
+    def extract_record_against(self, url: str) -> pd.DataFrame:
+        """
+        Extrae el registro histórico de partidos contra equipos desde Transfermarkt.
+
+        Args:
+            url (str): URL de la página de historial.
+
+        Returns:
+            pd.DataFrame: Registro histórico por equipo.
+        """
+
+        
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()
+        
+        first_url = url + "/page/1"
+        response = requests.get(first_url, headers=self.headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        last_page = soup.select_one("li.tm-pagination__list-item--icon-last-page a")
+
+        if last_page:
+            total_pages = int(re.search(r'page/(\d+)', last_page["href"]).group(1))
+        else:
+            total_pages = 1
+
+        print("Total pages:", total_pages)
+        print("" )
+
+        all_data = []
+
+        for page in range(1, total_pages + 1):
+            print("Scraping page...", page)
+            
+            url_pagina = url + f"/page/{page}"
+            response = requests.get(url_pagina, headers=self.headers)
+            soup = BeautifulSoup(response.text, "html.parser")
+            
+            rows = soup.select("table.items tbody tr")
+            for row in rows:
+
+                club_tag = row.select_one("td.hauptlink a")
+
+                logo_img = row.select_one("table.inline-table img")
+        
+                flag_img = row.select_one("td.zentriert img")
+
+                stats = row.select("td.zentriert, td.rechts")
+
+                if len(stats) >= 9: 
+                    goals = stats[5].text.strip()
+                    try:
+                        goals_for, goals_against = goals.split(":")
+                    except ValueError:
+                        goals_for, goals_against = None, None
+
+                else:
+                    continue
+
+                all_data.append({
+                    "team": club_tag.text.strip() if club_tag else None,
+                    "team_url": "https://www.transfermarkt.com" + club_tag["href"] if club_tag else None,
+                    "team_photo": logo_img["src"].strip() if logo_img else None,
+                    "nation":  flag_img["alt"].strip() if flag_img else None,
+                    "nation_url": flag_img["src"].strip() if flag_img else None,
+                    "matches": stats[1].text.strip(),
+                    "w": stats[2].text.strip(),
+                    "d": stats[3].text.strip(),
+                    "l": stats[4].text.strip(),
+                    "goals_for": goals_for,
+                    "goals_against": goals_against,
+                    "diff": stats[6].text.strip(),
+                    "points": stats[7].text.strip(),
+                    "ppg": stats[8].text.strip(),
+                    "win_ratio": stats[9].text.strip() if len(stats) > 9 else None,
+                    "average_attendance":  stats[10].text.strip() if len(stats) > 10 else None
+                })
+                
+            print(f"✅ Page {page} scraped")
+            time.sleep(1)
+
+        return pd.DataFrame(all_data)
+    
+    def extract_record_players(self, url: str) -> pd.DataFrame:
+        """
+        Extrae estadísticas históricas de jugadores desde Transfermarkt.
+
+        Args:
+            url (str): URL de la página de ranking de jugadores.
+
+        Returns:
+            pd.DataFrame: Datos de jugadores con estadísticas completas.
+        """
+        all_data = []
+
+      
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()
+        
+
+        first_url = url + "/page/1"
+        response = requests.get(first_url, headers=self.headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+
+        last_page = soup.select_one("li.tm-pagination__list-item--icon-last-page a")
+        if last_page:
+            total_pages = int(re.search(r'page/(\d+)', last_page["href"]).group(1))
+        else:
+            total_pages = 1
+
+        print("Total pages:", total_pages)
+
+    
+        for page in range(1, total_pages + 1):
+            print(f"Scraping page {page}...")
+            url_page = url + f"/page/{page}"
+            response = requests.get(url_page, headers=self.headers)
+            soup = BeautifulSoup(response.text, "html.parser")
+        
+
+            table = soup.find("table", class_="items")
+            if not table:
+                print("⚠️ Table not found on page", page)
+                continue
+
+            for tr in table.tbody.find_all("tr"):
+                tds = tr.find_all("td")
+                if not tds or len(tds) < 14:
+                    continue
+                
+            
+                tr_classes = tr.get("class", [])
+                active = "bg_blau_20" in tr_classes
+
+                # PLAYER + CLUB
+                inner_table = tds[1].find("table", class_="inline-table")
+                inner_rows = inner_table.find_all("tr")
+
+                # Player
+                player_td = tds[1].find("td", class_="hauptlink")
+                if not player_td:
+                    continue
+
+                player_a = player_td.find("a")
+                if not player_a:
+                    continue
+
+                # PLAYER IMAGE
+                player_img_tag = tds[1].find("img")
+
+                # Club / Retired
+                second_row_td = inner_rows[1].find("td")
+                club_link = second_row_td.find("a")
+                if club_link:
+                    current_club = club_link["title"].strip()
+                else:
+                    current_club = second_row_td.text.strip()
+
+                # Nations
+                nation = None
+                nation_flag_url = None    
+
+                if len(tds) > 5:
+                    nation_cell = tds[5]  # este es el correcto en tu estructura
+                    first_flag = nation_cell.find("img", class_="flaggenrahmen")
+
+                if first_flag:
+                    nation = first_flag.get("title")
+                    nation_flag_url = first_flag.get("src") 
+                else:
+                    nation = None
+                    nation_flag_url = None 
+
+                all_data.append({
+                    "rank": tds[0].text.strip(),
+                    "player": player_a.get("title", player_a.text.strip()).strip(),
+                    "current_club": current_club,
+                    "active": active,
+                    "player_url": "https://www.transfermarkt.com" + player_a.get("href", "").strip(),
+                    "player_photo": player_img_tag.get("src") if player_img_tag else None,
+                    "nation": nation,
+                    "nation_flag_url": nation_flag_url,
+                    "date_of_birth": tds[6].text.strip(),
+                    "appearances": tds[7].text.strip(),
+                    "goals": tds[8].text.strip(),
+                    "assists": tds[9].text.strip(),
+                    "own_goals": tds[10].text.strip(),
+                    "yellow_cards": tds[11].text.strip(),
+                    "second_yellow": tds[12].text.strip(),
+                    "red_cards": tds[13].text.strip(),
+                    "substituted_on": tds[14].text.strip(),
+                    "substituted_off": tds[15].text.strip(),
+                    "minutes_played": tds[16].text.strip()
+                    })
+
+
+            print(f"✅ Page {page} scraped")
+            time.sleep(1)  
+
+        return  pd.DataFrame(all_data)
+    
+    def extract_top_scorers(self, url: str) -> pd.DataFrame:
+        """
+        Extrae los máximos goleadores desde Transfermarkt.
+        """
+
+        all_data = []
+
+        # Obtener total de páginas
+        first_url = url + "/page/1"
+        response = self.session.get(first_url, headers=self.headers)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        last_page = soup.select_one("li.tm-pagination__list-item--icon-last-page a")
+        if last_page:
+            total_pages = int(re.search(r'page/(\d+)', last_page["href"]).group(1))
+        else:
+            total_pages = 1
+
+        print("Total pages:", total_pages)
+
+        # Loop por páginas
+        for page in range(1, total_pages + 1):
+            print(f"Scraping page {page}...")
+
+            url_page = f"{url}/page/{page}"
+            response = self.session.get(url_page, headers=self.headers)
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            table = soup.find("table", class_="items")
+            if not table:
+                print("⚠️ No se encontró tabla")
+                continue
+
+            rows = table.select("tbody > tr")
+
+            for tr in rows:
+                try:
+                    tds = tr.find_all("td")
+
+                    if len(tds) < 15:
+                        continue
+
+                    # 🔹 Player (mucho más robusto)
+                    player_a = tr.select_one("td.hauptlink a")
+                    if not player_a:
+                        continue
+
+                    player_name = player_a.get("title", player_a.text).strip()
+                    player_url = "https://www.transfermarkt.com" + player_a.get("href", "").strip()
+
+                    # 🔹 Foto jugador
+                    player_img = tr.select_one("img")
+                    player_photo = player_img.get("src") if player_img else None
+
+                    # 🔹 Club
+                    club_a = tr.select_one("td:nth-of-type(2) tr:nth-of-type(2) a")
+                    current_club = club_a.get("title").strip() if club_a else None
+
+                    # 🔹 Nación
+                    nation_img = tds[5].select_one("img")
+                    nation = nation_img.get("title") if nation_img else None
+                    nation_photo = nation_img.get("src") if nation_img else None
+
+                    # 🔹 Datos numéricos
+                    data = {
+                        "rank": tds[0].text.strip(),
+                        "player": player_name,
+                        "player_url": player_url,
+                        "player_photo": player_photo,
+                        "current_club": current_club,
+                        "nation": nation,
+                        "nation_photo": nation_photo,
+                        "date_of_birth": tds[6].text.strip(),
+                        "appearances": tds[7].text.strip(),
+                        "assists": tds[8].text.strip(),
+                        "substituted_on": tds[9].text.strip(),
+                        "substituted_off": tds[10].text.strip(),
+                        "minutes_played": tds[11].text.strip(),
+                        "minutes_per_goal": tds[12].text.strip(),
+                        "goals_per_match": tds[13].text.strip(),
+                        "goals": tds[14].text.strip(),
+                    }
+
+                    all_data.append(data)
+
+                except Exception as e:
+                    print("⚠️ Error en fila:", e)
+                    continue
+
+            print(f"✅ Page {page} scraped")
+            time.sleep(1)
+
+        return pd.DataFrame(all_data)
+    def extract_top_scores_by_season(self, url: str) -> pd.DataFrame:
+        """
+        Extrae los máximos goleadores por temporada desde Transfermarkt, incluyendo datos de jugador,
+        club, posición y estadísticas.
+
+        Args:
+            url (str): URL de la página de top scorers por temporada.
+
+        Returns:
+            pd.DataFrame: Tabla con datos completos de los jugadores por temporada.
+        """
+
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()
+        
+        response = requests.get(url, headers=self.headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+        table = soup.find("table", {"class": "items"})
+
+        all_data = []
+        current_season = None
+
+        for tr in table.tbody.find_all("tr"):
+
+            # 🔹 Detectar season
+            season_td = tr.find("td", class_="extrarow")
+            if season_td:
+                season_link = season_td.find("a")
+                if season_link:
+                    current_season = season_link.text.strip()
+                continue
+
+            # Fila de jugador
+            elif "odd" in tr.get("class", []) or "even" in tr.get("class", []):
+                tds = tr.find_all("td")
+            
+                
+                # Competition
+                competition_a = tds[1].find("a")
+
+                # Tabla interna jugador
+                inner_table = tds[2].find("table", {"class": "inline-table"})
+                inner_rows = inner_table.find_all("tr")
+                
+                player_a = inner_rows[0].find("a")
+                
+                # PLAYER IMAGE
+                player_img_tag = inner_table.select_one("td[rowspan='2'] img")
+
+                if player_img_tag:
+                    player_img = player_img_tag.get("data-src") or player_img_tag.get("src")
+                    player_img = player_img.strip() if player_img else None
+                else:
+                    player_img = None
+
+                # Appearances (dentro de <a>)
+                appearances_a = tds[6].find("a")
+
+                all_data.append({
+                    "season": current_season, 
+                    "competition": competition_a["title"].strip() if competition_a else tds[1].text.strip(), 
+                    "competition_photo":tds[0].find("img")["src"],
+                    "player":player_a["title"].strip() if player_a else inner_rows[0].text.strip(), 
+                    "player_photo":player_img, 
+                    "position": inner_rows[1].find("td").text.strip(),
+                    "appearances": appearances_a.text.strip() if appearances_a else tds[6].text.strip(), 
+                    "assists":tds[7].text.strip(), 
+                    "substituted_on":tds[8].text.strip(),
+                    "substituted_off":tds[9].text.strip(), 
+                    "minutes_played":tds[10].text.strip(),
+                    "minutes_per_goal":tds[11].text.strip(), 
+                    "goals_per_match": tds[12].text.strip(),  
+                    "goals":tds[13].text.strip()
+                })
+
+        return pd.DataFrame(all_data)
+    
+    def extract_most_value_players(self, url: str) -> pd.DataFrame:
+        """
+        Extrae los jugadores más valiosos de Transfermarkt, incluyendo info de jugador,
+        club, posición y valor máximo alcanzado.
+
+        Args:
+            url (str): URL de la sección de jugadores más valiosos.
+
+        Returns:
+            pd.DataFrame: Tabla con información de los jugadores más valiosos.
+        """    
+        
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()
+        
+        first_url = url + "/page/1"
+        response= requests.get(first_url, headers=self.headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        last_page = soup.select_one("li.tm-pagination__list-item--icon-last-page a")
+
+        if last_page:
+            total_pages = int(re.search(r'page/(\d+)', last_page["href"]).group(1))
+        else:
+            total_pages = 1
+
+        print("Total pages:", total_pages)
+        print("" )
+
+        all_data = []
+
+        for page in range(1, total_pages + 1):
+            print("Scraping page...", page)
+
+            url_pagina = url + f"/page/{page}"
+            response = requests.get(url_pagina, headers=self.headers)
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            rows = soup.select("table.items tbody tr")
+            rows = [row for row in rows if row.select_one("td table.inline-table")]
+            for row in rows:
+                # PLAYER INFO
+                inline_table = row.select_one("td table.inline-table")
+                if inline_table:
+                
+                    # PLAYER IMAGE
+                    player_img_tag = row.select_one("td table.inline-table td[rowspan='2'] img")
+
+                    if player_img_tag:
+                        player_img = player_img_tag.get("data-src") or player_img_tag.get("src")
+                        player_img = player_img.strip() if player_img else None
+                    else:
+                        player_img = None
+
+                    # Nombre jugador y URL
+                    player_tag = inline_table.select_one("td.hauptlink a")
+                    player_name = player_tag.text.strip() if player_tag else None
+                    player_url = "https://www.transfermarkt.com" + player_tag["href"] if player_tag else None
+
+                    # Posición
+                    position_tag = inline_table.select("tr")[1].select_one("td")
+                    position = position_tag.text.strip() if position_tag else None
+                else:
+                    player_img = player_name = player_url = position = None
+        
+                club_td = row.select_one("td.zentriert")  
+                club_img = club_td.select_one("img") if club_td else None
+
+                if club_img:
+                    current_club = club_img.get("title", "").strip()
+                    club_logo = club_img.get("src", "").strip()
+                else:
+                    current_club = None
+                    club_logo = None
+
+                # COLUMNAS NUMÉRICAS
+                cells_rechts = row.select("td.rechts")
+                cells_zentriert = row.select("td.zentriert")
+
+                all_data.append({
+                    "player":player_name,
+                    "player_url":player_url, 
+                    "player_photo": player_img, 
+                    "position":position,
+                    "current_team":current_club, 
+                    "current_team_photo":club_logo, 
+                    "highest_market_value":cells_rechts[0].text.strip() if len(cells_rechts) >= 1 else None,
+                    "date":cells_rechts[1].text.strip() if len(cells_rechts) >= 2 else None, 
+                    "im_verein_from": cells_zentriert[1].text.strip() if len(cells_zentriert) >= 2 else None, 
+                    "in_club_until":cells_zentriert[2].text.strip() if len(cells_zentriert) >= 3 else None    
+                    })
+
+            print(f"✅ Page {page} scraped")
+            time.sleep(1)  
+
+        return pd.DataFrame(all_data)
+    
+    def extract_foreign_players(self, url: str) -> pd.DataFrame:
+        """
+        Extrae información de jugadores extranjeros de un club o liga en Transfermarkt.
+
+        Args:
+            url (str): URL de la sección de jugadores extranjeros.
+
+        Returns:
+            pd.DataFrame: Información de jugadores extranjeros.
+        """    
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()  
+
+        first_url = url + "/page/1"
+        response = requests.get(first_url, headers=self.headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        last_page = soup.select_one("li.tm-pagination__list-item--icon-last-page a")
+
+        if last_page:
+            total_pages = int(re.search(r'page/(\d+)', last_page["href"]).group(1))
+        else:
+            total_pages = 1
+
+        print("Total pages:", total_pages)
+        print("" )
+
+        all_data = []
+
+        for page in range(1, total_pages + 1):
+            print("Scraping page...", page)
+
+            url_pagina = url + f"/page/{page}"
+            response = requests.get(url_pagina, headers=self.headers)
+            soup = BeautifulSoup(response.text, "html.parser")
+
+
+            rows = soup.select("tbody tr.odd, tbody tr.even")
+
+
+            for row in rows:
+                cols = row.find_all("td")
+
+                # --- País ---
+                country_tag = cols[0].find("a")
+
+                # --- Jugador ---
+                player_tag = cols[4].find("a")
+                
+                # --- Matches ---
+                matches_text = cols[5].text.strip()
+
+                all_data.append({
+                    "nation": country_tag.text.strip() if country_tag else None,
+                    "nation_photo": cols[0].find("img")["src"].strip() if cols[0].find("img") else None,
+                    "players": cols[1].text.strip(),
+                    "minutes": cols[2].text.strip(),
+                    "goals": cols[3].text.strip(),
+                    "player_name": player_tag.text.strip() if player_tag else None,
+                    "player_url": "https://www.transfermarkt.com" + player_tag["href"] if player_tag else None,
+                    "max_matches_apperances": matches_text.replace(" matches", "")
+
+                })
+
+            print(f"✅ Page {page} scraped")
+            time.sleep(1)  
+
+        return pd.DataFrame(all_data)
+    
+    def parse_page(self, url: str):
+            
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()  
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        tables = soup.find_all("div", class_="responsive-table")
+        page_data = []
+
+        for i, table in enumerate(tables):
+            category = "Youngest" if i == 0 else "Oldest"
+            rows = table.select("tbody tr.odd, tbody tr.even")
+
+            for row in rows:
+                cells = row.find_all("td")
+                if not cells or len(cells) < 10:
+                    continue
+
+                # Jugador
+                player_table = cells[1].find("table", class_="inline-table")
+                player_tag = player_table.find("a")
+
+
+                player_photo_tag = player_table.find("img")
+                player_photo = (
+                    player_photo_tag.get("data-src")
+                    if player_photo_tag and player_photo_tag.get("data-src")
+                    else player_photo_tag.get("src") if player_photo_tag else None
+                )
+
+                # Nacionalidad
+                nationality_img = cells[5].find("img")
+
+                # Manager
+                manager_tag = cells[6].find("a")
+
+                # Equipo local
+                team_home_tag = cells[8].find("a")
+                team_name_home = (
+                    team_home_tag.get("title")
+                    if team_home_tag and team_home_tag.get("title")
+                    else cells[8].find("img").get("alt")
+                    if cells[8].find("img")
+                    else None
+                )
+
+                # Equipo visitante
+                team_away_tag = cells[10].find("a")
+                team_name_away = (
+                    team_away_tag.get("title")
+                    if team_away_tag and team_away_tag.get("title")
+                    else cells[10].find("img").get("alt")
+                    if cells[10].find("img")
+                    else None
+                )
+
+                page_data.append({
+                    "number": cells[0].text.strip(),
+                    "player":  player_tag.text.strip(),
+                    "player_url": "https://www.transfermarkt.com" + player_tag["href"],
+                    "player_photo": player_photo,
+                    "position": player_table.find_all("tr")[1].text.strip(),
+                    "nation": nationality_img["title"].strip() if nationality_img else None,
+                    "nation_photo": nationality_img["src"].strip() if nationality_img else None,
+                    "manager": manager_tag.text.strip() if manager_tag else None,
+                    "manager_url": "https://www.transfermarkt.com" + manager_tag["href"] if manager_tag else None,
+                    "debut_date": cells[7].text.strip(),
+                    "home_team": team_name_home,
+                    "result": cells[9].text.strip(),
+                    "away_team": team_name_away,
+                    "age_at_that_time":  cells[-1].text.strip(),
+                    "category": category,
+                })
+
+            # Siguiente página (solo hay un pager arriba)
+            next_page_tag = soup.select_one("li.tm-pagination__list-item--icon-next-page a")
+            next_page_url = "https://www.transfermarkt.com" + next_page_tag["href"] if next_page_tag else None
+
+        return page_data, next_page_url
+    
+    def extract_debut_young_old_players(self, url: str):
+        """
+        Extrae información de los jugadores más jóvenes y más veteranos en su debut.
+
+        Args:
+            url (str): URL de la sección de debut de jugadores en Transfermarkt.
+ 
+        Returns:
+            Tuple[pd.DataFrame, pd.DataFrame]: (df_jugadores_jovenes, df_jugadores_viejos)
+        """ 
+        
+
+        current_url = url
+        all_data = []
+
+        while current_url:
+            page_data, current_url = self.parse_page(current_url)
+            all_data.extend(page_data)
+
+        df = pd.DataFrame(all_data)
+        df_debut_youngest= df[df['category']=='Youngest'].reset_index(drop=True)
+        df_debut_youngest = df_debut_youngest.drop(columns=['category'])
+        df_debut_oldest= df[df['category']=='Oldest'].reset_index(drop=True)
+        df_debut_oldest = df_debut_oldest.drop(columns=['category'])
+
+        return df_debut_youngest, df_debut_oldest
+    
+    def extract_where_ex_players(self, url: str) -> pd.DataFrame:
+        """
+        Extrae información de ex-jugadores y sus equipos actuales desde Transfermarkt.
+
+        Args:
+            url (str): URL de la sección de ex-jugadores.
+
+        Returns:
+            pd.DataFrame: Datos de ex-jugadores con información de club actual y estadísticas.
+        """
+        
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()  
+
+        first_url = url + "/page/1"
+        response = requests.get(first_url, headers=self.headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        pagination_links = soup.select("li.tm-pagination__list-item a.tm-pagination__link")
+        page_numbers = []
+
+        for link in pagination_links:
+            href = link.get("href", "")
+            match = re.search(r'page/(\d+)', href)
+            if match:
+                page_numbers.append(int(match.group(1)))
+
+        if page_numbers:
+            total_pages = max(page_numbers)
+        else:
+            total_pages = 1
+
+        print("Total pages:", total_pages)
+        print(" ")
+
+        all_data = []
+        for page in range(1, total_pages + 1):
+            print("Scraping page...", page)
+
+            url_pagina = url + f"/page/{page}"
+            response= requests.get(url_pagina, headers=self.headers)
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            rows = soup.select("tbody tr.odd, tbody tr.even")
+
+            for row in rows:
+                cols = row.find_all("td")
+
+                nation_img = cols[5].find("img")
+
+                all_data.append({
+                    "player": cols[2].find("a").text.strip(),
+                    "player_url": "https://www.transfermarkt.com" + cols[2].find("a")["href"].strip(),
+                    "player_photo": cols[1].find("img")["src"].strip() if cols[1].find("img") else None,
+                    "position": cols[3].text.strip(),
+                    "age": cols[4].text.strip(),
+                    "nation": nation_img["title"].strip() if nation_img else None,
+                    "nation_flag": nation_img["src"].strip() if nation_img else None,
+                    "appearances": cols[6].text.strip(),
+                    "goals": cols[7].text.strip(),
+                    "mv_at_transfer": cols[8].text.strip(),
+                    "player_exit_date": cols[9].text.strip(),
+                    "current_market_value": cols[10].text.strip(),
+                    "current_club": cols[13].text.strip(),
+                    "current_club_logo": cols[11].find("img")["src"].strip() if cols[11].find("img") else None,
+                    "current_club_url": "https://www.transfermarkt.com" + cols[11].find("a")["href"].strip() if cols[11].find("a") else None,
+                    "current_club_division": cols[14].text.strip()
+                    
+
+                    })
+            print(f"✅ Page {page} scraped")
+            time.sleep(1)  
+            
+        return pd.DataFrame(all_data)
+    
+    def extract_returned_players(self, url: str) -> pd.DataFrame:
+        """
+        Extracts information about players who returned to a club from Transfermarkt.
+
+        Args:
+                url (str): URL of the page listing returned players.
+
+
+        Returns:
+                pd.DataFrame: DataFrame containing player info, position, nationality, previous and current club details,
+                        transfer fees, appearances, and days away.
+        """
+       
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status() 
+
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        rows = soup.select("tbody tr.odd, tbody tr.even")
+
+        all_data= []
+        for row in rows:
+                cols = row.find_all("td")
+                
+                # Jugador
+                player_table = cols[1].find("table", class_="inline-table")
+                player_tag = player_table.find("a")
+                
+                all_data.append({
+                        "player":  player_tag.text.strip(),
+                        "player_url": "https://www.transfermarkt.com" + player_tag["href"],
+                        "player_photo": player_table.find("img")["data-src"] if player_table.find("img") else None,
+                        "position": cols[4].text.strip(),
+                        "nation": cols[5].find("img")["title"].strip() if cols[5].find("img") else None,
+                        "nation_flag": cols[5].find("img")["src"].strip() if cols[5].find("img") else None,
+                        "left_to_sing_for_season": cols[6].text.strip(),
+                        "left_to_sing_for_club": cols[9].text.strip(),
+                        "left_to_sing_for_club_logo": cols[7].find("img")["src"].strip() if cols[7].find("img") else None,
+                        "left_to_sing_for_club_division": cols[10].text.strip(),
+                        "left_to_sing_for_club_division_url": "https://www.transfermarkt.com" + cols[10].find("a")["href"].strip() if cols[10].find("a") else None,
+                        "left_to_sing_for_fee": cols[11].text.strip(),
+                        "appearances_after": cols[12].text.strip(),
+                        "days_away": cols[13].text.strip(),
+                        "appearances_before": cols[14].text.strip(),
+                        "joined_from_season": cols[15].text.strip(),
+                        "joined_from_club": cols[18].text.strip(),
+                        "joined_from_club_logo": cols[16].find("img")["src"].strip() if cols[16].find("img") else None,
+                        "joined_from_club_division": cols[19].text.strip(),
+                        "joined_from_club_division_url":  "https://www.transfermarkt.com" + cols[19].find("a")["href"].strip() if cols[19].find("a") else None,
+                        "joined_from_fee":  cols[20].text.strip()
+                        })
+
+        return pd.DataFrame(all_data)
+    
+    def extract_staff_history(self, url: str) -> pd.DataFrame:
+        """
+        Extracts historical information of staff members (e.g., coaches) from Transfermarkt.
+
+        Args:
+            url (str): URL of the staff history page.
+        
+
+        Returns:
+            pd.DataFrame: DataFrame containing coach/staff name, photo, date of birth,
+                        nationality, appointment dates, tenure, match stats, and points per game.
+        """
+
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()  
+
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        table = soup.find("table", class_="items")
+        rows = table.find("tbody").find_all("tr")
+
+        all_data = []
+
+        for row in rows:
+            cols = row.find_all("td")
+            if len(cols) < 10:
+                continue  # fila inesperada
+        
+            # --- Name, DOB y photos ---
+            staff_info_table = cols[0].find("table", class_="inline-table")
+ 
+            img_tag = staff_info_table.find("img")
+            name_tag = staff_info_table.find("a", {"title": True})
+            country_img = cols[4].find("img")
+
+            all_data.append({
+                "coach": name_tag.text.strip() if name_tag else None,
+                "coach_photo": img_tag["src"] if img_tag else None,
+                "date_of_birth": cols[3].text.strip() if cols[3] else None,
+                "nation": country_img["title"] if country_img else None,
+                "nation_photo": country_img["src"] if country_img else None,
+                "appointed": cols[5].text.strip(),
+                "end_of_post": cols[6].text.strip(),
+                "time_in_post": cols[7].text.strip(),
+                "matches": cols[8].text.strip(),
+                "w": cols[9].text.strip(),
+                "d": cols[10].text.strip(),
+                "l": cols[11].text.strip(),
+                "ppg": cols[12].text.strip()
+            })
+
+        return pd.DataFrame(all_data)
+    
+    def extract_referee_statistics(self, url: str) -> pd.DataFrame:
+        """
+        Extract referee statistics from Transfermarkt, including cards and penalties for and against.
+
+        Args:
+            url (str): URL of the referee statistics page.
+    
+
+        Returns:
+            pd.DataFrame: Referee statistics including matches, W-D-L, yellow/red cards, and penalties.
+        """
+  
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()  
+  
+        first_url = url + "/page/1"
+        response = requests.get(first_url, headers=self.headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        pagination_links = soup.select("li.tm-pagination__list-item a.tm-pagination__link")
+        page_numbers = []
+
+        for link in pagination_links:
+            href = link.get("href", "")
+            match = re.search(r'page/(\d+)', href)
+            if match:
+                page_numbers.append(int(match.group(1)))
+
+        if page_numbers:
+            total_pages = max(page_numbers)
+        else:
+            total_pages = 1
+
+        print("Total pages:", total_pages)
+        print(" ")
+
+        all_data = []
+        for page in range(1, total_pages + 1):
+                print("Scraping page...", page)
+
+                url_pagina = url + f"/page/{page}"
+                response = requests.get(url_pagina, headers=self.headers)
+                soup = BeautifulSoup(response.text, "html.parser")
+
+
+                table = soup.find("table", class_="items")
+                rows = table.find("tbody").find_all("tr")
+
+
+                for row in rows:
+                    cols = row.find_all("td")
+                    
+                    if len(cols) < 11:
+                        continue
+                    
+                    referee_info = cols[0].find("table", class_="inline-table")
+                    if referee_info is None:
+                        print("Fila ignorada por estructura inesperada:", row)
+                        continue
+                    
+                    # Basic info
+                    img_tag = referee_info.find("img")
+                    name_tag = referee_info.find("a", {"title": True})
+                    
+                    # Nation
+                    country_img = referee_info.find("img", class_="flaggenrahmen")
+
+                    # Estadísticas
+                    stats_for = [c.get_text(strip=True) for c in cols[6:10]]  # For FC Barcelona
+                    stats_vs = [c.get_text(strip=True) for c in cols[10:15]]  # vs FC Barcelona
+                
+                    all_data.append({
+                        "referee": name_tag.text.strip() if name_tag else None,
+                        "referee_photo": img_tag["src"] if img_tag else None,
+                        "nation": country_img["title"] if country_img else None,
+                        "nation_url": country_img["src"] if country_img else None,
+                        "matches": cols[4].get_text(strip=True),
+                        "w-d-l":  cols[5].get_text(strip=True),
+                        "yellow_for": stats_for[0],
+                        "second_yellow_for": stats_for[1],
+                        "red_for": stats_for[2],
+                        "penalty_for": stats_for[3],
+                        "yellow_vs": stats_vs[0],
+                        "second_yellow_vs": stats_vs[1],
+                        "red_vs": stats_vs[2],
+                        "penalty_vs": stats_vs[3]
+                    })
+                
+                print(f"✅ Page {page} scraped")
+                time.sleep(1)  
+
+        return pd.DataFrame(all_data)
+
+    def extract_penalty_statistics(self, url: str) -> pd.DataFrame:
+        """
+        Extract player penalty statistics from Transfermarkt, including penalties taken, converted, missed, and success ratio.
+
+        Args:
+            url (str): URL of the penalty statistics page.
+
+
+        Returns:
+            pd.DataFrame: Player penalty statistics including player info, nation, position, and penalty stats.
+        """
+
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()
+    
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        table = soup.find("table", {"class": "items"})
+        rows = table.find("tbody").find_all("tr", recursive=False)
+
+        all_data = []
+
+        for row in rows:
+            cells = row.find_all("td", recursive=False)
+            
+            # Jugador y tabla anidada
+            player_table = cells[0].find("table", class_="inline-table")
+            player_img_tag = player_table.find("img")
+            
+            player_tag = player_table.find("a")
+            
+            # Nacionalidad (primera)
+            nat_imgs = cells[1].find_all("img")
+
+            penalties_tag = cells[2].find("a")
+            converted_tag = cells[3].find("a")
+            missed_tag = cells[4].find("a")
+            ratio_tag = cells[5].find("a")
+
+            all_data.append({
+                "player": player_tag.text.strip(),
+                "player_url": "https://www.transfermarkt.com" + player_tag['href'],
+                "player_photo": player_img_tag['data-src'] if player_img_tag and 'data-src' in player_img_tag.attrs else player_img_tag['src'],
+                "position": player_table.find_all("tr")[1].find("td").text.strip(),
+                "nation":  nat_imgs[0]['title'] if nat_imgs else "",
+                "nation_photo": nat_imgs[0]['src'] if nat_imgs else "",
+                "penalties": penalties_tag.text.strip() if penalties_tag else cells[2].text.strip(),
+                "converted":  converted_tag.text.strip() if converted_tag else cells[3].text.strip(),
+                "missed": missed_tag.text.strip() if missed_tag else cells[4].text.strip(),
+                "ratio":  ratio_tag.text.strip() if ratio_tag else cells[5].text.strip()
+            })
+
+        return pd.DataFrame(all_data) 
+
+    def extract_penalty_shootouts(self, url: str) -> pd.DataFrame:
+        """
+        Extract information on matches decided by penalty shootouts from Transfermarkt.
+
+        Args:
+            url (str): URL of the penalty shootouts page.
+
+        Returns:
+            pd.DataFrame: Information on competition, teams, results, and missed penalties.
+        """
+    
+   
+        response = self.session.get(url, headers=self.headers)
+        response.raise_for_status()
+    
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        table = soup.find("table", class_="items")
+        all_data = []
+
+        for row in table.tbody.find_all("tr"):
+            zentriert_cells = row.find_all("td", class_="zentriert")
+            
+            # Solo procesar filas que tengan suficientes celdas "zentriert"
+            if len(zentriert_cells) < 3:
+                continue
+
+            # Competición
+            comp_tag = row.find("td", class_="hauptlink")
+
+            # Equipo local y logo
+            team_home_tag = row.find("td", class_="rechts hauptlink no-border-rechts")
+            team_home_logo_tag = row.find("td", class_="zentriert no-border-links wappen-table-td")
+
+            # Equipo visitante y logo
+            team_away_tag = row.find("td", class_="links hauptlink no-border-links")
+            team_away_logo_tag = row.find("td", class_="zentriert no-border-rechts wappen-table-td")
+
+            # Resultado
+            result_tag = row.find("a", class_="ergebnis-link")
+
+            all_data.append({
+                "competition": comp_tag.find("a").text.strip() if comp_tag and comp_tag.find("a") else "",
+                "competition_photo": comp_tag.find("img")["src"] if comp_tag and comp_tag.find("img") else "",
+                "season": zentriert_cells[0].text.strip(),
+                "round": zentriert_cells[1].text.strip(),
+                "missed_home": zentriert_cells[2].text.strip(),
+                "team_home": team_home_tag.find("a").text.strip() if team_home_tag else "",
+                "team_home_photo": team_home_logo_tag.find("img")["src"] if team_home_logo_tag else "",
+                "result": result_tag.text.strip() if result_tag else "",
+                "team_away": team_away_tag.find("a").text.strip() if team_away_tag else "",
+                "team_away_photo": team_away_logo_tag.find("img")["src"] if team_away_logo_tag else "",
+                "missed_away": zentriert_cells[-1].text.strip()
+            })
+
+        return pd.DataFrame(all_data)  
 

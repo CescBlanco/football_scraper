@@ -281,7 +281,108 @@ def extract_summary_current_next_sesion_transfers(table) -> pd.DataFrame:
 
     return pd.DataFrame([data])
 
+def safe_int(value):
+    """
+    Convert a value to int safely. Returns None if conversion fails.
+    """
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
+
+def parse_group_stage_opponents(td):
+    """
+    Parse group stage opponents from a <td> element.
+    Returns:
+        - List of opponent names with (H)/(A) if applicable
+        - List of opponent URLs
+    """
+    opponents = []
+    opponent_urls = []
+
+    for item in td.children:
+        if item.name == "a" and "/verein/" in item.get("href", ""):
+            name = item.get_text(strip=True)
+
+            # buscamos texto siguiente inmediato para ver si es (H) o (A)
+            next_text = ""
+            if item.next_sibling:
+                next_text = str(item.next_sibling).replace("\xa0", "").replace(",", "").strip()
+            if next_text in ["(H)", "(A)"]:
+                name = f"{name} {next_text}"
+
+            # agregamos solo si hay contenido válido
+            if name:
+                opponents.append(name)
+                opponent_urls.append("https://www.transfermarkt.com" + item["href"])
+
+    return opponents, opponent_urls
+
+
+def parse_knockout_opponents(td):
+    """
+    Parse knockout stage opponents from a <td> containing inline-table.
+    Returns:
+        - List of opponent names
+        - List of opponent URLs
+    """
+    opponents = []
+    opponent_urls = []
+
+    for a in td.find_all("a", href=True, title=True):
+        href = a["href"]
+        if "/verein/" in href:
+            name = a.get_text(strip=True)
+            if name:
+                opponents.append(name)
+                opponent_urls.append("https://www.transfermarkt.com" + href)
+    return opponents, opponent_urls
+
+def extract_legs_from_row_with_url(row, base_url="https://www.transfermarkt.com"):
+    """
+    Extract first leg and second leg results and URLs from a knockout row.
+    Handles unplayed matches as "-:-".
+    """
+    td_results = row.find_all("td", class_="zentriert")
+    
+
+    first_leg_text = "-:-"
+    first_leg_url = None
+    second_leg_text = "-:-"
+    second_leg_url = None
+
+
+    results_tds = td_results[-2:] if len(td_results) >= 2 else td_results
+
+    for i, td in enumerate(results_tds):
+        text = "-:-"
+        url = None
+
+        a_tag = td.find("a")
+        if a_tag:
+            if "ergebnis-link" in a_tag.get("class", []):
+                text = a_tag.get_text(" ", strip=True)
+                url = base_url + a_tag["href"] if a_tag.has_attr("href") else None
+            else:
+                text = "-:-"
+                url = None
+        else:
+
+            text = "-:-"
+            url = None
+
+        if i == 0:
+            first_leg_text = text
+            first_leg_url = url
+        elif i == 1:
+            second_leg_text = text
+            second_leg_url = url
+
+    return first_leg_text, first_leg_url, second_leg_text, second_leg_url
+
+  
 #---------------------------PLAYER------------------------------------------------
+
 # Function to extract data from a span or return default value if not found
 def extract_text(soup, class_name, default=None, index=None):
     elements = soup.find_all('span', class_=class_name)
