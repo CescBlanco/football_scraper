@@ -2617,6 +2617,7 @@ class TransfermarktTeamScraper:
             time.sleep(1)
 
         return pd.DataFrame(all_data)
+    
     def extract_top_scores_by_season(self, url: str) -> pd.DataFrame:
         """
         Extrae los máximos goleadores por temporada desde Transfermarkt, incluyendo datos de jugador,

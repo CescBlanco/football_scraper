@@ -58,7 +58,7 @@ def parse_general_table(table, league, season, qualification_legend):
         rows.append({
             "league": league,
             "season": season,
-            "position": int(tds[0].get_text(strip=True).split()[0]),
+            "position": int(tds[0].get_text(strip=True).replace(".", "")),
             "club": club_link.get_text(strip=True),
             "club_url": "https://www.transfermarkt.com" + club_link["href"],
             "club_logo": logo["src"] if logo else None,
@@ -409,29 +409,28 @@ def get_img_src(tag):
     """Safe extraction of src from img tag"""
     return tag["src"] if tag and tag.has_attr("src") else None
 
-def parse_int(text):
-    """Convert text to int safely, replacing '-' with 0"""
-    return int(text.strip().replace("-", "0")) if text.strip() else 0
-
-def parse_minutes(text: str)-> int:
-    """
-    Convert minutes string to int safely.
-    
-    Handles:
-    - '-' -> 0
-    - '10.814' -> 10814
-    - '1.234' -> 1234
-    - removes apostrophes
-    """
-    if not text or text.strip() == "-":
-        return 0
-    
-    clean_text = text.strip().replace("'", "").replace(".", "").replace(",", "")
+def parse_int(value):
+    if not value or value.strip() in ["", "-"]:
+        return None
     
     try:
-        return int(clean_text)
+        return int(value.replace(",", "").strip())
     except ValueError:
-        return 0
+        return None
+
+def parse_minutes(value):
+    if not value or value.strip() == "":
+        return None
+
+    value = value.strip()
+
+    # quitar apóstrofe y separador de miles
+    value = value.replace("'", "").replace(".", "")
+
+    try:
+        return int(value)
+    except ValueError:
+        return None
     
 
 
