@@ -1,8 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-from typing import List, Dict, Optional, Any
-
+from typing import List, Dict, Optional, Any, Tuple
+import re
+import time
 #----------------------------------------LEAGUE-------------------------------------------------------------------------------------------
 def extract_season_standings(url: str, headers: Dict[str, str], season_selected: str = '2025/2026') -> pd.DataFrame:
     """
@@ -170,3 +171,101 @@ def extract_data_penalties(url: str) -> dict:
     player_details = response.json()
 
     return player_details
+
+#------------------------------------------------------------MATCH-----------------------------------------------------------------------------
+def get_ids(match_url: str) -> Tuple[str, str]:
+    """
+    Extract matchup ID and game ID from a 365Scores match URL.
+
+    Args:
+        match_url (str): 365Scores match URL.
+
+    Returns:
+        Tuple[str, str]: (matchup_id, game_id) or (None, None) if not found.
+    """
+    # Extract matchup ID
+    match = re.search(r'-(\d+-\d+-\d+)', match_url)
+    id_1 = match.group(1) if match else None
+
+    # Extract game ID
+    match = re.search(r'id=(\d+)', match_url)
+    id_2 = match.group(1) if match else None
+
+    return id_1, id_2
+
+def get_match_data(match_url: str) -> dict:
+    """
+    Fetch raw match data from 365Scores API.
+
+    Args:
+        match_url (str): 365Scores match URL.
+        headers (Dict): HTTP headers for the API request.
+
+    Returns:
+        dict: JSON data for the match.
+    """
+    matchup_id, game_id = get_ids(match_url)
+    if not matchup_id or not game_id:
+        raise ValueError("Could not extract matchup_id or game_id from URL.")
+
+    response = requests.get( f'https://webws.365scores.com/web/game/?appTypeId=5&langId=1&timezoneName=Europe/Madrid&userCountryId=7&gameId={game_id}&matchupId={matchup_id}')
+    response.raise_for_status()
+    time.sleep(1)  # polite pause to avoid rate limiting
+    match_data = response.json().get('game', {})
+    return match_data
+
+def process_squad(squad_data) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """
+        Process lineup data: basic info and exploded stats DataFrame.
+        """
+        if not squad_data:
+            return pd.DataFrame(), pd.DataFrame()
+
+        # Normalize members
+        row_data_squad = pd.json_normalize(squad_data)
+        info_squad = row_data_squad.copy()
+
+        # Drop unnecessary columns for basic squad info
+        drop_columns = ['hasStats', 'stats', 'popularityRank', 'competitorId', 'formation.shortName','createdAt', 'heatMap', 'hasShotChart', 'substitution.type', 'isDoubtful','injury.categoryId', 'injury.imageVersion']
+        info_squad = info_squad.drop(columns=drop_columns, errors='ignore')
+
+        # Extract stats
+        if 'stats' in row_data_squad.columns:
+            df_stats = pd.DataFrame(row_data_squad, columns=['id', 'stats'])
+            df_stats = df_stats.explode('stats').dropna(subset=['stats']).reset_index(drop=True)
+            df_stats = pd.concat([df_stats.drop(columns='stats'), pd.json_normalize(df_stats['stats'])], axis=1)
+            df_stats = df_stats.drop(columns=['shortName', 'imageId'], errors='ignore')
+        else:
+            df_stats = pd.DataFrame()
+
+        return info_squad, df_stats
+
+def get_requests_stats(match_url: str) -> requests.Response:
+    """
+    Request statistics for a 365Scores match.
+
+    Args:
+        match_url (str): 365Scores match URL.
+
+    Returns:
+        requests.Response: Response object from the API request.
+    """
+    matchup_id, game_id = get_ids(match_url)
+    url_stats = f'https://webws.365scores.com/web/game/stats/?appTypeId=5&langId=1&timezoneName=Europe/Madrid&userCountryId=7&games={game_id}'
+    response = requests.get(url_stats)
+    time.sleep(3)  # avoid rate limiting
+    return response
+
+def get_match_time_stats(match_url: str) -> Dict:
+    """
+    Extract actual game time statistics from a 365Scores match.
+
+    Args:
+        match_url (str): 365Scores match URL.
+
+    Returns:
+        Dict: JSON dictionary containing actual game statistics.
+    """
+    response = get_requests_stats(match_url)
+    data = response.json()
+    return data.get('actualGameStatistics', {})
