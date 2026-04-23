@@ -548,3 +548,86 @@ def safe_expand(df: pd.DataFrame, col: str, prefix: str) -> pd.DataFrame:
     if col in df.columns:
         return df[col].apply(lambda x: x if isinstance(x, dict) else {}).apply(pd.Series).add_prefix(prefix)
     return pd.DataFrame(index=df.index)
+
+
+#----------------------------------------MATCH-------------------------------------------------------------------------------------------
+def safe_expand(df: pd.DataFrame, col: str, prefix: str) -> pd.DataFrame:
+        """
+        Safely expands nested player-like columns into flat structure.
+        """
+        if col not in df.columns:
+            return pd.DataFrame(index=df.index)
+
+        expanded = df[col].apply(
+            lambda x: {} if not isinstance(x, dict) else x).apply(pd.Series)
+
+        # Select only expected columns if they exist
+        cols = ["name", "slug", "shortName", "position", "jerseyNumber", "id"]
+        expanded = expanded[[c for c in cols if c in expanded.columns]]
+
+        return expanded.add_prefix(f"{prefix}_")
+
+def safe_manager(manager, prefix: str) -> pd.DataFrame:
+            """
+            Safely converts manager dict into flat DataFrame.
+            """
+            if not isinstance(manager, dict):
+                return pd.DataFrame(
+                    [{f"{prefix}_name": None,
+                    f"{prefix}_slug": None,
+                    f"{prefix}_short_name": None,
+                    f"{prefix}_manager_id": None}]
+                )
+
+            return pd.DataFrame([manager])[["name", "slug", "shortName", "id"]].rename(
+                columns={
+                    "name": f"{prefix}_name",
+                    "slug": f"{prefix}_slug",
+                    "shortName": f"{prefix}_short_name",
+                    "id": f"{prefix}_manager_id"
+                }
+            )
+
+def safe_extract_players(players, team_label: str) -> pd.DataFrame:
+        """
+        Safely extracts player list into flat DataFrame.
+        """
+
+        if not players:
+            return pd.DataFrame()
+        df = pd.DataFrame(players)
+
+        if df.empty or "player" not in df.columns:
+            return pd.DataFrame()
+
+        player_df = df["player"].apply(lambda x: {} if not isinstance(x, dict) else x).apply(pd.Series)
+
+        cols = [ "name", "slug", "shortName","position", "jerseyNumber","height", "id","dateOfBirthTimestamp" ]
+
+        player_df = player_df[[c for c in cols if c in player_df.columns]]
+
+        if "dateOfBirthTimestamp" in player_df.columns:
+            player_df["dateOfBirthTimestamp"] = pd.to_datetime(player_df["dateOfBirthTimestamp"], unit="s",errors="coerce" )
+
+        player_df["team"] = team_label
+
+        return player_df
+
+def process_team(data: list) -> pd.DataFrame:
+        df = pd.DataFrame(data)
+
+        if df.empty or "player" not in df.columns:
+            return pd.DataFrame()
+
+        player = df["player"].apply( lambda x: {} if not isinstance(x, dict) else x).apply(pd.Series)
+
+        player = player.drop(columns=["userCount","gender","fieldTranslations","firstName","lastName","sofascoreId"],errors="ignore")
+
+        return pd.concat( [player, df.drop(columns=["player"], errors="ignore")],axis=1 )
+
+#----------------------------------------MATCH ONE PLAYER-------------------------------------------------------------------------------------------
+
+def safe_expand_one_player(df, col, prefix):
+    if col in df.columns:
+        return df[col].apply(lambda x: x if isinstance(x, dict) else {}).apply(pd.Series).add_prefix(prefix)
+    return pd.DataFrame(index=df.index)
