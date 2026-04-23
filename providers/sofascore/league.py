@@ -917,6 +917,7 @@ class SofascoreLeagueService:
     #                 # Explode events safely
     #                 # -------------------------
     #                 df = df.explode("events")
+
     #                 # convertir None/NaN en dict vacío
     #                 df["events"] = df["events"].apply( lambda x: x if isinstance(x, dict) else {})
 
@@ -987,87 +988,87 @@ class SofascoreLeagueService:
     #     return df, valid, invalid
 
     
-    # def extract_top_players_stat(self, id_league_selected: Union[str, int],id_season_selected: Union[str, int],stat_type: str = "rating") -> pd.DataFrame:
-    #     """
-    #     Extract top players statistics for a given league and season
-    #     from SofaScore API.
+    def extract_top_players_stat(self, id_league_selected: Union[str, int],id_season_selected: Union[str, int],stat_type: str = "rating") -> pd.DataFrame:
+        """
+        Extract top players statistics for a given league and season
+        from SofaScore API.
 
-    #     This function retrieves all available top-player statistics,
-    #     validates the requested stat_type, and returns a cleaned DataFrame
-    #     with only relevant columns.
+        This function retrieves all available top-player statistics,
+        validates the requested stat_type, and returns a cleaned DataFrame
+        with only relevant columns.
 
-    #     Args:
-    #         id_league_selected (str | int):
-    #             SofaScore league ID.
+        Args:
+            id_league_selected (str | int):
+                SofaScore league ID.
 
-    #         id_season_selected (str | int):
-    #             SofaScore season ID.
+            id_season_selected (str | int):
+                SofaScore season ID.
 
-    #         stat_type (str, optional):
-    #             Statistic type to extract (e.g. "rating", "goals", "assists").
-    #             Default is "rating".
+            stat_type (str, optional):
+                Statistic type to extract (e.g. "rating", "goals", "assists").
+                Default is "rating".
 
-    #     Returns:
-    #         pd.DataFrame:
-    #             DataFrame containing player statistics.
+        Returns:
+            pd.DataFrame:
+                DataFrame containing player statistics.
 
-    #     Raises:
-    #         KeyError:
-    #             If 'topPlayers' is missing in API response.
+        Raises:
+            KeyError:
+                If 'topPlayers' is missing in API response.
 
-    #         ValueError:
-    #             If stat_type is not available.
+            ValueError:
+                If stat_type is not available.
 
-    #         Exception:
-    #             Propagates API request errors.
-    #     """
+            Exception:
+                Propagates API request errors.
+        """
 
-    #     # -----------------------------
-    #     # Build API endpoint
-    #     # -----------------------------
-    #     api_url = f"https://www.sofascore.com/api/v1/unique-tournament/{id_league_selected}/season/{id_season_selected}/top-players/overall"
+        # -----------------------------
+        # Build API endpoint
+        # -----------------------------
+        api_url = f"https://www.sofascore.com/api/v1/unique-tournament/{id_league_selected}/season/{id_season_selected}/top-players/overall"
         
-    #     # -----------------------------
-    #     # Fetch data
-    #     # -----------------------------
-    #     json_data = sofascore_requests(api_url)
+        # -----------------------------
+        # Fetch data
+        # -----------------------------
+        json_data = sofascore_requests(api_url)
 
-    #     if not json_data or "topPlayers" not in json_data:
-    #         raise KeyError("Missing 'topPlayers' in API response")
+        if not json_data or "topPlayers" not in json_data:
+            raise KeyError("Missing 'topPlayers' in API response")
 
-    #     top_players = json_data["topPlayers"]
+        top_players = json_data["topPlayers"]
 
-    #     # -----------------------------
-    #     # Validate stat_type
-    #     # -----------------------------
-    #     available_stats = list(top_players.keys())
+        # -----------------------------
+        # Validate stat_type
+        # -----------------------------
+        available_stats = list(top_players.keys())
 
-    #     if stat_type not in available_stats:
-    #         raise ValueError(f"Invalid stat_type '{stat_type}'. Available: {available_stats}")
+        if stat_type not in available_stats:
+            raise ValueError(f"Invalid stat_type '{stat_type}'. Available: {available_stats}")
 
-    #     # -----------------------------
-    #     # Normalize data
-    #     # -----------------------------
-    #     stats = pd.json_normalize(top_players[stat_type])
+        # -----------------------------
+        # Normalize data
+        # -----------------------------
+        stats = pd.json_normalize(top_players[stat_type])
 
-    #     if stats.empty:
-    #         return pd.DataFrame()
+        if stats.empty:
+            return pd.DataFrame()
 
     
-    #     stats= stats.drop(columns=['playedEnough','statistics.id', 'statistics.type', 'statistics.statisticsType.sportSlug',	'statistics.statisticsType.statisticsType','player.fieldTranslations.nameTranslation.ar',	
-    #                                 'player.userCount',	'player.gender','player.fieldTranslations.nameTranslation.bn',	'player.fieldTranslations.nameTranslation.hi',
-    #                                 'player.fieldTranslations.shortNameTranslation.ar',	'player.fieldTranslations.shortNameTranslation.bn',	'player.fieldTranslations.shortNameTranslation.hi',
-    #                                 'team.gender',	'team.sport.name',	'team.sport.slug',	'team.sport.id',	'team.userCount',	'team.national',	'team.type',
-    #                                 'team.teamColors.primary',	'team.teamColors.secondary',	'team.teamColors.text',	'team.fieldTranslations.nameTranslation.ar',	
-    #                                 'team.fieldTranslations.nameTranslation.bn','team.fieldTranslations.nameTranslation.hi',	'team.fieldTranslations.nameTranslation.ru'	,
-    #                                 'team.fieldTranslations.shortNameTranslation.ar',	'team.parentTeam.name',	'team.parentTeam.slug',	'team.parentTeam.shortName',	'team.parentTeam.gender',
-    #                                 'team.parentTeam.sport.name',	'team.parentTeam.sport.slug',	'team.parentTeam.sport.id',	'team.parentTeam.userCount',	'team.parentTeam.nameCode',
-    #                                 'team.parentTeam.disabled',	'team.parentTeam.national',	'team.parentTeam.type',	'team.parentTeam.id',	'team.parentTeam.teamColors.primary',	
-    #                                 'team.parentTeam.teamColors.secondary',	'team.parentTeam.teamColors.text',	'team.parentTeam.fieldTranslations.nameTranslation.ar',
-    #                                 'team.fieldTranslations.shortNameTranslation.bn'	,'team.fieldTranslations.shortNameTranslation.hi',
-    #                                 'team.parentTeam.fieldTranslations.nameTranslation.bn',	'team.parentTeam.fieldTranslations.nameTranslation.hi',	'team.parentTeam.fieldTranslations.nameTranslation.ru'], errors= 'ignore')
+        stats= stats.drop(columns=['playedEnough','statistics.id', 'statistics.type', 'statistics.statisticsType.sportSlug',	'statistics.statisticsType.statisticsType','player.fieldTranslations.nameTranslation.ar',	
+                                    'player.userCount',	'player.gender','player.fieldTranslations.nameTranslation.bn',	'player.fieldTranslations.nameTranslation.hi',
+                                    'player.fieldTranslations.shortNameTranslation.ar',	'player.fieldTranslations.shortNameTranslation.bn',	'player.fieldTranslations.shortNameTranslation.hi',
+                                    'team.gender',	'team.sport.name',	'team.sport.slug',	'team.sport.id',	'team.userCount',	'team.national',	'team.type',
+                                    'team.teamColors.primary',	'team.teamColors.secondary',	'team.teamColors.text',	'team.fieldTranslations.nameTranslation.ar',	
+                                    'team.fieldTranslations.nameTranslation.bn','team.fieldTranslations.nameTranslation.hi',	'team.fieldTranslations.nameTranslation.ru'	,
+                                    'team.fieldTranslations.shortNameTranslation.ar',	'team.parentTeam.name',	'team.parentTeam.slug',	'team.parentTeam.shortName',	'team.parentTeam.gender',
+                                    'team.parentTeam.sport.name',	'team.parentTeam.sport.slug',	'team.parentTeam.sport.id',	'team.parentTeam.userCount',	'team.parentTeam.nameCode',
+                                    'team.parentTeam.disabled',	'team.parentTeam.national',	'team.parentTeam.type',	'team.parentTeam.id',	'team.parentTeam.teamColors.primary',	
+                                    'team.parentTeam.teamColors.secondary',	'team.parentTeam.teamColors.text',	'team.parentTeam.fieldTranslations.nameTranslation.ar',
+                                    'team.fieldTranslations.shortNameTranslation.bn'	,'team.fieldTranslations.shortNameTranslation.hi',
+                                    'team.parentTeam.fieldTranslations.nameTranslation.bn',	'team.parentTeam.fieldTranslations.nameTranslation.hi',	'team.parentTeam.fieldTranslations.nameTranslation.ru'], errors= 'ignore')
 
-    #     return stats
+        return stats
     
     def extract_top_team_stat(self, id_league_selected: Union[str, int],id_season_selected: Union[str, int],stat_type: str = "rating") -> pd.DataFrame:
         """
@@ -1137,15 +1138,15 @@ class SofascoreLeagueService:
 
 
         stats = stats.drop(columns=['team.gender',	'team.sport.name'	,'team.sport.slug',	'team.sport.id'	,'team.userCount',	'team.national',	'team.type',	'team.country.alpha2',
-                                                                    'team.country.alpha3', 'team.teamColors.primary',	'team.teamColors.secondary',	'team.teamColors.text' ,'team.fieldTranslations.nameTranslation.ar',
-                                                                    'team.fieldTranslations.nameTranslation.ru', 'team.fieldTranslations.shortNameTranslation.ar',	'team.parentTeam.name'	,'team.parentTeam.slug'	,
-                                                                    'team.parentTeam.gender',	'team.parentTeam.sport.name',	'team.parentTeam.sport.slug',	'team.parentTeam.sport.id',	'team.parentTeam.userCount'	,
-                                                                    'team.parentTeam.national',	'team.parentTeam.type',	'team.parentTeam.country.alpha2',	'team.parentTeam.country.alpha3',	'team.parentTeam.country.name',
-                                                                    'team.parentTeam.country.slug',	'team.parentTeam.id',	'team.parentTeam.teamColors.primary',	'team.parentTeam.teamColors.secondary',
-                                                                    'team.parentTeam.teamColors.text',	'team.parentTeam.fieldTranslations.nameTranslation.ar',	'team.parentTeam.fieldTranslations.nameTranslation.bn',
-                                                                    'team.fieldTranslations.shortNameTranslation.bn'	,'team.fieldTranslations.shortNameTranslation.hi',
-                                                                    'team.parentTeam.fieldTranslations.nameTranslation.hi',	'team.parentTeam.fieldTranslations.nameTranslation.ru',	'team.fieldTranslations.nameTranslation.bn',
-                                                                    'team.fieldTranslations.nameTranslation.hi', 'statistics.awardedMatches', 'statistics.id'], errors= 'ignore')
+                                'team.country.alpha3', 'team.teamColors.primary',	'team.teamColors.secondary',	'team.teamColors.text' ,'team.fieldTranslations.nameTranslation.ar',
+                                'team.fieldTranslations.nameTranslation.ru', 'team.fieldTranslations.shortNameTranslation.ar',	'team.parentTeam.name'	,'team.parentTeam.slug'	,
+                                'team.parentTeam.gender',	'team.parentTeam.sport.name',	'team.parentTeam.sport.slug',	'team.parentTeam.sport.id',	'team.parentTeam.userCount'	,
+                                'team.parentTeam.national',	'team.parentTeam.type',	'team.parentTeam.country.alpha2',	'team.parentTeam.country.alpha3',	'team.parentTeam.country.name',
+                                'team.parentTeam.country.slug',	'team.parentTeam.id',	'team.parentTeam.teamColors.primary',	'team.parentTeam.teamColors.secondary',
+                                'team.parentTeam.teamColors.text',	'team.parentTeam.fieldTranslations.nameTranslation.ar',	'team.parentTeam.fieldTranslations.nameTranslation.bn',
+                                'team.fieldTranslations.shortNameTranslation.bn'	,'team.fieldTranslations.shortNameTranslation.hi',
+                                'team.parentTeam.fieldTranslations.nameTranslation.hi',	'team.parentTeam.fieldTranslations.nameTranslation.ru',	'team.fieldTranslations.nameTranslation.bn',
+                                'team.fieldTranslations.nameTranslation.hi', 'statistics.awardedMatches', 'statistics.id'], errors= 'ignore')
 
         return stats
     
@@ -1214,12 +1215,12 @@ class SofascoreLeagueService:
             return pd.DataFrame()
 
         df= df.drop(columns=['playedEnough', 'statistics.id', 'statistics.type', 'statistics.statisticsType.sportSlug',	'statistics.statisticsType.statisticsType',
-                                        'player.userCount',	'player.gender','player.fieldTranslations.nameTranslation.ar',	'player.fieldTranslations.nameTranslation.bn',	'player.fieldTranslations.nameTranslation.hi',
-                                        'player.fieldTranslations.shortNameTranslation.ar','player.fieldTranslations.shortNameTranslation.bn',	'player.fieldTranslations.shortNameTranslation.hi',
-                                        'team.gender',	'team.sport.name',	'team.sport.slug',	'team.sport.id',	'team.userCount',	'team.national',	'team.type',
-                                        'team.teamColors.primary',	'team.teamColors.secondary',	'team.teamColors.text',	'team.fieldTranslations.nameTranslation.ar',
-                                        'team.fieldTranslations.nameTranslation.bn','team.fieldTranslations.nameTranslation.hi',	'team.fieldTranslations.nameTranslation.ru'])                     
-                                            
+                'player.userCount',	'player.gender','player.fieldTranslations.nameTranslation.ar',	'player.fieldTranslations.nameTranslation.bn',	'player.fieldTranslations.nameTranslation.hi',
+                'player.fieldTranslations.shortNameTranslation.ar','player.fieldTranslations.shortNameTranslation.bn',	'player.fieldTranslations.shortNameTranslation.hi',
+                'team.gender',	'team.sport.name',	'team.sport.slug',	'team.sport.id',	'team.userCount',	'team.national',	'team.type',
+                'team.teamColors.primary',	'team.teamColors.secondary',	'team.teamColors.text',	'team.fieldTranslations.nameTranslation.ar',
+                'team.fieldTranslations.nameTranslation.bn','team.fieldTranslations.nameTranslation.hi',	'team.fieldTranslations.nameTranslation.ru'])                     
+                    
         return df
     
     def extract_all_matches(self, id_league_selected: Union[str, int],id_season_selected: Union[str, int]) -> pd.DataFrame:
