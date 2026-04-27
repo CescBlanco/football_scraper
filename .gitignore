@@ -210,3 +210,8 @@ football_scraper_venv
 manual_test_transfermarkt/
 manual_test_365scores/
 manual_test_sofascore/
+manual_test_fotmob/
+
+# Cloudflare session cookies
+fotmob_cookies.json
+fotmob_player_cookies.json
