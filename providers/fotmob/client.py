@@ -5,9 +5,7 @@ from .league import FotmobLeagueService
 from .team import FotmobTeamService
 from .player import FotmobPlayerService
 from .match import FotmobMatchService 
-# from .match import SofascoreMatchScraper
-# from .manager import SofascoreManagerScraper
-# from providers.sofascore.constants import DEFAULT_HEADERS
+
 
 class FotmobClient:
     def __init__(self, session=None):
