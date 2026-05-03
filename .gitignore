@@ -211,7 +211,9 @@ manual_test_transfermarkt/
 manual_test_365scores/
 manual_test_sofascore/
 manual_test_fotmob/
+manual_test_understat/
 
-# Cloudflare session cookies
+# Cloudflare session cookies and png files
 fotmob_cookies.json
 fotmob_player_cookies.json
+xg_timeline.png
