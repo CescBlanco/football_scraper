@@ -5,6 +5,8 @@ from providers.transfermarkt.client import TransfermarktClient
 from providers.sofascore.client import SofascoreClient
 from providers.fotmob.client import FotmobClient
 from providers.understat.client import UnderstatClient
+from providers.espn.client import ESPNClient
+
 
 class FootballClient:
     def __init__(self):
@@ -16,3 +18,4 @@ class FootballClient:
         self.sofascore = SofascoreClient(self.session)
         self.fotmob = FotmobClient(self.session)
         self.understat = UnderstatClient(self.session)
+        self.espn = ESPNClient(self.session)

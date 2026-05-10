@@ -1,0 +1,1 @@
+BASE_URL_COMPETITIONS = "https://www.espn.com/soccer/competitions"
