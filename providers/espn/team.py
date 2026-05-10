@@ -655,7 +655,7 @@ class ESPNTeamScraper:
             raise TypeError("season must be a string")
 
         id_team, df_competitions = (self.extract_avaiable_competitions( name_league, name_team  ))
-
+        
         competition_df = df_competitions[ df_competitions["name"] == name_league ]
         if competition_df.empty:
             raise ValueError( f"Competition '{name_league}' not available for team '{name_team}'")
@@ -777,8 +777,10 @@ class ESPNTeamScraper:
                         except Exception:
                             pass
 
-                    except Exception:
-                        df = pd.DataFrame()
+                    except Exception as e:
+                        print("ERROR:")
+                        print(e)
+                        raise
 
                     tab_tables[table_title] = df
 
