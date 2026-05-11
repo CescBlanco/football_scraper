@@ -105,7 +105,7 @@ class ESPNPlayerScraper:
 
         url = f"https://www.espn.com/soccer/player/bio/_/id/{player_id}/{player_slug}"
         
-        driver=  _create_driver
+        driver=  _create_driver()
         wait = WebDriverWait(driver, 10)
 
         history = []
@@ -285,7 +285,7 @@ class ESPNPlayerScraper:
 
         url_player = f"https://www.espn.com/soccer/player/_/id/{player_id}/{player_slug}"
 
-        driver= _create_driver
+        driver= _create_driver()
 
         wait = WebDriverWait(driver, 15)
         all_rows = []
@@ -461,7 +461,7 @@ class ESPNPlayerScraper:
 
         url_player = f"https://www.espn.com/soccer/player/_/id/{player_id}/{player_slug}"
 
-        driver= _create_driver
+        driver= _create_driver()
 
         wait = WebDriverWait(driver, 15)
 

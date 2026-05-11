@@ -291,10 +291,12 @@ class ESPNMatchScraper:
         - Other statistics are stored as integers.
         """
 
-        match_id = url.split("/")[-2]
+        match = re.search(r"gameId/(\d+)", url)
 
-        if not match_id.isdigit():
+        if not match:
             raise ValueError("Invalid match URL. Match ID not found.")
+
+        match_id = match.group(1)
 
         options = webdriver.ChromeOptions()
         options.add_argument("--headless")
@@ -421,10 +423,12 @@ class ESPNMatchScraper:
             If Selenium WebDriver fails.
         """
 
-        match_id = url.split("/")[-2]
+        match = re.search(r"gameId/(\d+)", url)
 
-        if not match_id.isdigit():
+        if not match:
             raise ValueError("Invalid match URL. Match ID not found.")
+
+        match_id = match.group(1)
 
         options = webdriver.ChromeOptions()
         options.add_argument("--headless")
@@ -551,10 +555,12 @@ class ESPNMatchScraper:
             If Selenium WebDriver fails.
         """
 
-        match_id = url.split("/")[-2]
+        match = re.search(r"gameId/(\d+)", url)
 
-        if not match_id.isdigit():
+        if not match:
             raise ValueError("Invalid match URL. Match ID not found.")
+
+        match_id = match.group(1)
 
         options = webdriver.ChromeOptions()
         options.add_argument("--headless")
@@ -706,10 +712,12 @@ class ESPNMatchScraper:
             - unused_substitute
         """
 
-        match_id = url.split("/")[-2]
+        match = re.search(r"gameId/(\d+)", url)
 
-        if not match_id.isdigit():
+        if not match:
             raise ValueError("Invalid match URL. Match ID not found.")
+
+        match_id = match.group(1)
 
         options = webdriver.ChromeOptions()
 
@@ -892,25 +900,35 @@ class ESPNMatchScraper:
         wait = WebDriverWait(driver, 20)
 
 
-        url_commentary= f'https://www.espn.com/soccer/commentary/_/gameId/{url.split("/")[-2]}'
+        match = re.search(r"gameId/(\d+)", url)
+
+        if not match:
+            raise ValueError("Invalid match URL. Match ID not found.")
+
+        match_id = match.group(1)
+
+        url_commentary= f'https://www.espn.com/soccer/commentary/_/gameId/{match_id}'
 
         # -------------------------
         # ABRIR WEB
         # -------------------------
-        driver.get(url_commentary)
 
-        # esperar tabla
-        wait.until(EC.presence_of_element_located( (By.CSS_SELECTOR, "tbody.Table__TBODY")))
+        try: 
+            driver.get(url_commentary)
 
-        # -------------------------
-        # ALL COMMENTARY
-        # -------------------------
-        return extract_events(driver)
+            # esperar tabla
+            wait.until(EC.presence_of_element_located( (By.CSS_SELECTOR, "tbody.Table__TBODY")))
+
+            # -------------------------
+            # ALL COMMENTARY
+            # -------------------------
+            return extract_events(driver)
+        finally:
+            driver.quit()
+    
     
     def extract_match_timeline(self, url):
-        # -------------------------
-        # CONFIG CHROME
-        # -------------------------
+
         options = Options()
 
         options.add_argument("--headless=new")
@@ -926,23 +944,25 @@ class ESPNMatchScraper:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         wait = WebDriverWait(driver, 20)
 
-        # -------------------------
-        # ABRIR WEB
-        # -------------------------
-        url_commentary= f'https://www.espn.com/soccer/commentary/_/gameId/{url.split("/")[-2]}'
+        match = re.search(r"gameId/(\d+)", url)
 
-        # -------------------------
-        # ABRIR WEB
-        # -------------------------
-        driver.get(url_commentary)
+        if not match:
+            raise ValueError("Invalid match URL. Match ID not found.")
 
-        boton_key_events = wait.until( EC.element_to_be_clickable( (By.XPATH,"//button[contains(., 'Key Events')]" )))
-        driver.execute_script("arguments[0].click();", boton_key_events)
+        match_id = match.group(1)
 
-        # esperar a que cambie el contenido
-        time.sleep(2)
+        url_commentary= f'https://www.espn.com/soccer/commentary/_/gameId/{match_id}'
 
-        # -------------------------
-        # EXTRAER KEY EVENTS
-        # -------------------------
-        return  extract_events(driver)
+
+        try: 
+            driver.get(url_commentary)
+
+            boton_key_events = wait.until( EC.element_to_be_clickable( (By.XPATH,"//button[contains(., 'Key Events')]" )))
+            driver.execute_script("arguments[0].click();", boton_key_events)
+
+            time.sleep(2)
+
+            return  extract_events(driver)
+
+        finally:
+            driver.quit()

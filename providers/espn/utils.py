@@ -341,8 +341,9 @@ def parse_squad(driver: webdriver.Chrome) -> list[dict]:
 
             for row in rows:
                 cols = row.find_elements( By.TAG_NAME, "td")
+                values = [c.text.strip() for c in cols]
 
-                if len(cols) < 10:
+                if len(values) < 10:
                     continue
 
                 try:
@@ -352,38 +353,38 @@ def parse_squad(driver: webdriver.Chrome) -> list[dict]:
                         "section": title,
                         "player_name": a_tag.text,
                         "player_url": a_tag.get_attribute("href"),
-                        "position": cols[1].text,
-                        "age": cols[2].text,
-                        "height": cols[3].text,
-                        "weight": cols[4].text,
-                        "nation": cols[5].text,
-                        "appearances": cols[6].text,
-                        "substitut_app": cols[7].text
+                        "position": values[1],
+                        "age": values[2],
+                        "height": values[3],
+                        "weight": values[4],
+                        "nation": values[5],
+                        "appearances": values[6],
+                        "substitut_app": values[7]
                     }
 
                     # Goalkeeper stats
                     if "goalkeeper" in title:
                         player.update({
-                            "saves": cols[8].text,
-                            "goals_against": cols[9].text,
-                            "assists": cols[10].text if len(cols) > 10 else "",
-                            "fouls_committed": cols[11].text if len(cols) > 11 else "" ,
-                            "fouls_received": cols[12].text if len(cols) > 12 else "",
-                            "yellow_cards": cols[13].text if len(cols) > 13 else "",
-                            "red_cards": cols[14].text if len(cols) > 14 else "" 
+                            "saves": values[8],
+                            "goals_against": values[9],
+                            "assists": values[10] if len(values) > 10 else "",
+                            "fouls_committed": values[11] if len(values) > 11 else "" ,
+                            "fouls_received": values[12] if len(values) > 12 else "",
+                            "yellow_cards": values[13] if len(values) > 13 else "",
+                            "red_cards": values[14] if len(values) > 14 else "" 
                         })
 
                     # Outfield player stats
                     else:
                         player.update({
-                            "goals": cols[8].text,
-                            "assists": cols[9].text,
-                            "shots": cols[10].text if len(cols) > 10 else "",
-                            "shots_on_target": cols[11].text if len(cols) > 11 else "",
-                            "fouls_committed": cols[12].text if len(cols) > 12 else "",
-                            "fouls_received": cols[13].text if len(cols) > 13 else "",
-                            "yellow_cards": cols[14].text if len(cols) > 14 else "",
-                            "red_cards": cols[15].text if len(cols) > 15 else ""
+                            "goals": values[8],
+                            "assists": values[9],
+                            "shots": values[10] if len(values) > 10 else "",
+                            "shots_on_target": values[11] if len(values) > 11 else "",
+                            "fouls_committed": values[12] if len(values) > 12 else "",
+                            "fouls_received": values[13] if len(values) > 13 else "",
+                            "yellow_cards": values[14] if len(values) > 14 else "",
+                            "red_cards": values[15] if len(values) > 15 else ""
                         })
 
                     squad.append(player)
