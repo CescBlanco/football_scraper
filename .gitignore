@@ -213,6 +213,7 @@ manual_test_sofascore/
 manual_test_fotmob/
 manual_test_understat/
 manual_test_espn/
+manual_test_scoresway/
 
 # Cloudflare session cookies and png files
 fotmob_cookies.json

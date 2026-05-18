@@ -6,6 +6,7 @@ from providers.sofascore.client import SofascoreClient
 from providers.fotmob.client import FotmobClient
 from providers.understat.client import UnderstatClient
 from providers.espn.client import ESPNClient
+from providers.scoresway.client import ScoreswayClient
 
 
 class FootballClient:
@@ -19,3 +20,4 @@ class FootballClient:
         self.fotmob = FotmobClient(self.session)
         self.understat = UnderstatClient(self.session)
         self.espn = ESPNClient(self.session)
+        self.scoresway = ScoreswayClient(self.session)
