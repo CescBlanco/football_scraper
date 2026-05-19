@@ -3,6 +3,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
+import pandas as pd
 import re
 import requests
 import json
@@ -306,3 +307,94 @@ def extract_width(span) -> float | None:
 
     return None
 
+#----------------------------------------------EVENTS MATCH---------------------------------------------
+def normalize_label(x: str) -> str:
+    """
+    Normalize a text label into a clean snake_case string.
+
+    This function:
+    - Converts text to lowercase
+    - Replaces non-alphanumeric characters with underscores
+    - Collapses multiple underscores
+    - Strips leading/trailing underscores
+
+    Parameters
+    ----------
+    x : str
+        Input label to normalize.
+
+    Returns
+    -------
+    str
+        Normalized snake_case label. Returns empty string if input is invalid.
+    """
+    
+    # ------------------------
+    # VALIDATE INPUT
+    # ------------------------
+    if x is None:
+        return ""
+
+    # ------------------------
+    # NORMALIZE
+    # ------------------------
+    if not isinstance(x, str):
+        x = str(x)
+
+    x = x.lower()
+
+    x = re.sub(r"[^a-z0-9]+", "_", x)
+    x = re.sub(r"_+", "_", x)
+
+    return x.strip("_")
+
+def build_qualifier_mapping(qualifiers_df: pd.DataFrame) -> dict:
+    """
+    Build a mapping from qualifier codes to normalized qualifier labels.
+
+    This function transforms a qualifiers reference DataFrame into a
+    dictionary that maps qualifier codes to cleaned, normalized names.
+
+    Parameters
+    ----------
+    qualifiers_df : pd.DataFrame
+        DataFrame containing:
+        - Code
+        - Qualifier
+
+    Returns
+    -------
+    dict
+        Dictionary mapping:
+        {Code -> normalized qualifier label}
+
+    Raises
+    ------
+    TypeError
+        If qualifiers_df is not a DataFrame.
+    ValueError
+        If required columns are missing.
+    """
+
+    # ------------------------
+    # VALIDATE INPUT
+    # ------------------------
+    if not isinstance(qualifiers_df, pd.DataFrame):
+        raise TypeError("qualifiers_df must be a pandas DataFrame")
+
+    required_cols = {"Code", "Qualifier"}
+    missing_cols = required_cols - set(qualifiers_df.columns)
+
+    if missing_cols:
+        raise ValueError(f"Missing required columns: {missing_cols}")
+
+    # ------------------------
+    # CLEAN DATA
+    # ------------------------
+    codes = qualifiers_df["Code"]
+    labels = qualifiers_df["Qualifier"].apply(normalize_label)
+
+    # ------------------------
+    # BUILD MAPPING
+    # ------------------------
+    return dict(zip(codes, labels))

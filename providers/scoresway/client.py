@@ -5,6 +5,7 @@ from .team import ScoreswayTeamScraper
 from .player import ScoreswayPlayerScraper
 from .pre_match import ScoreswayPreMatchScraper 
 from .post_match import ScoreswayPostMatchScraper 
+from .events_match import ScoreswayEventsMatchScraper 
 
 
 class ScoreswayClient:
@@ -18,3 +19,4 @@ class ScoreswayClient:
         self.player = ScoreswayPlayerScraper(self.session, self.team)
         self.pre_match = ScoreswayPreMatchScraper(self.session)
         self.post_match = ScoreswayPostMatchScraper(self.session)
+        self.events_match = ScoreswayEventsMatchScraper(self.session)
