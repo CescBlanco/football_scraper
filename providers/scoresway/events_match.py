@@ -10,12 +10,7 @@ class ScoreswayEventsMatchScraper:
         self.events_ids = load_events_ids()
         self.qualifiers= load_qualifiers()
 
-        self.event_mapping = dict(
-            zip(
-                self.events_ids["Code"].astype(str),
-                self.events_ids["Event"].apply(normalize_label)
-            )
-        )
+        self.event_mapping = dict( zip( self.events_ids["Code"].astype(str),self.events_ids["Event"].apply(normalize_label) ))
 
         self.qualifier_mapping = build_qualifier_mapping(self.qualifiers)
 
@@ -51,16 +46,17 @@ class ScoreswayEventsMatchScraper:
         RuntimeError
             If extraction or processing fails.
         """
+
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
             # ------------------------
             # EXTRACT MATCH IDENTIFIER
             # ------------------------
@@ -150,17 +146,17 @@ class ScoreswayEventsMatchScraper:
         RuntimeError
             If expansion process fails.
         """
+
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(events_df, pd.DataFrame):
+            raise TypeError("events_df must be a pandas DataFrame")
+
+        if not isinstance(event_type, str):
+            raise TypeError("event_type must be a string")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(events_df, pd.DataFrame):
-                raise TypeError("events_df must be a pandas DataFrame")
-
-            if not isinstance(event_type, str):
-                raise TypeError("event_type must be a string")
-            
-
             # ------------------------
             # FILTER EVENTS
             # ------------------------

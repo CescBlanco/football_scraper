@@ -63,23 +63,24 @@ class ScoreswayPostMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+
+        # ------------------------
+        # EXTRACT MATCH IDENTIFIER
+        # ------------------------
+        match_id = url.split("/")[-2]
+        if not match_id:
+            raise ValueError("Could not extract match identifier from URL")
+
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
-            # ------------------------
-            # EXTRACT MATCH IDENTIFIER
-            # ------------------------
-            match_id = url.split("/")[-2]
-            if not match_id:
-                raise ValueError("Could not extract match identifier from URL")
-
+            
             # ------------------------
             # BUILD API URL
             # ------------------------
@@ -225,16 +226,17 @@ class ScoreswayPostMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
+            
             # ------------------------
             # CREATE SELENIUM DRIVER
             # ------------------------
@@ -441,23 +443,23 @@ class ScoreswayPostMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+
+        # ------------------------
+        # EXTRACT MATCH IDENTIFIER
+        # ------------------------
+        match_id = url.split("/")[-2]
+        if not match_id:
+            raise ValueError("Could not extract match identifier from URL")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
-            # ------------------------
-            # EXTRACT MATCH IDENTIFIER
-            # ------------------------
-            match_id = url.split("/")[-2]
-            if not match_id:
-                raise ValueError("Could not extract match identifier from URL")
-
             # ------------------------
             # BUILD API URL
             # ------------------------
@@ -563,23 +565,24 @@ class ScoreswayPostMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+
+        # ------------------------
+        # EXTRACT MATCH IDENTIFIER
+        # ------------------------
+        match_id = url.split("/")[-2]
+        if not match_id:
+            raise ValueError("Could not extract match identifier from URL")
+
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
-            # ------------------------
-            # EXTRACT MATCH IDENTIFIER
-            # ------------------------
-            match_id = url.split("/")[-2]
-            if not match_id:
-                raise ValueError("Could not extract match identifier from URL")
-
+            
             # ------------------------
             # BUILD API URL
             # ------------------------
@@ -643,23 +646,23 @@ class ScoreswayPostMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+
+        # ------------------------
+        # EXTRACT MATCH IDENTIFIER
+        # ------------------------
+        match_id = url.split("/")[-2]
+        if not match_id:
+            raise ValueError("Could not extract match identifier from URL")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
-            # ------------------------
-            # EXTRACT MATCH IDENTIFIER
-            # ------------------------
-            match_id = url.split("/")[-2]
-            if not match_id:
-                raise ValueError("Could not extract match identifier from URL")
-
             # ------------------------
             # BUILD API URL
             # ------------------------
@@ -759,24 +762,23 @@ class ScoreswayPostMatchScraper:
         RuntimeError
             If the extraction process fails.
         """
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
 
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+
+        # ------------------------
+        # EXTRACT MATCH IDENTIFIER
+        # ------------------------
+        match_id = url.split("/")[-2]
+        if not match_id:
+            raise ValueError("Could not extract match identifier from URL")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
-            # ------------------------
-            # EXTRACT MATCH IDENTIFIER
-            # ------------------------
-            match_id = url.split("/")[-2]
-            if not match_id:
-                raise ValueError("Could not extract match identifier from URL")
-
             # ------------------------
             # BUILD API URL
             # ------------------------
@@ -877,17 +879,18 @@ class ScoreswayPostMatchScraper:
         RuntimeError
             If the extraction process fails.
         """
+        
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
 
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
+        
             # ------------------------
             # CREATE SELENIUM DRIVER
             # ------------------------
@@ -1014,23 +1017,23 @@ class ScoreswayPostMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+
+        # ------------------------
+        # EXTRACT MATCH IDENTIFIER
+        # ------------------------
+        match_id = url.split("/")[-2]
+        if not match_id:
+            raise ValueError("Could not extract match identifier from URL")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
-            # ------------------------
-            # EXTRACT MATCH IDENTIFIER
-            # ------------------------
-            match_id = url.split("/")[-2]
-            if not match_id:
-                raise ValueError("Could not extract match identifier from URL")
-
             # ------------------------
             # BUILD API URL
             # ------------------------
@@ -1109,23 +1112,23 @@ class ScoreswayPostMatchScraper:
             If the extraction process fails.
         """
 
-        try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
 
-            if not url.strip():
-                raise ValueError("url cannot be empty")
+        if not url.strip():
+            raise ValueError("url cannot be empty")
 
-            # ------------------------
-            # EXTRACT MATCH IDENTIFIER
-            # ------------------------
-            match_id = url.split("/")[-2]
-            if not match_id:
-                raise ValueError("Could not extract match identifier from URL")
-
+        # ------------------------
+        # EXTRACT MATCH IDENTIFIER
+        # ------------------------
+        match_id = url.split("/")[-2]
+        if not match_id:
+            raise ValueError("Could not extract match identifier from URL")
+        
+        try:  
             # ------------------------
             # BUILD API URL
             # ------------------------
@@ -1206,16 +1209,16 @@ class ScoreswayPostMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
             # ------------------------
             # CREATE SELENIUM DRIVER
             # ------------------------
@@ -1381,23 +1384,23 @@ class ScoreswayPostMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+
+        # ------------------------
+        # EXTRACT MATCH IDENTIFIER
+        # ------------------------
+        match_id = url.split("/")[-2]
+        if not match_id:
+            raise ValueError("Could not extract match identifier from URL")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
-            # ------------------------
-            # EXTRACT MATCH IDENTIFIER
-            # ------------------------
-            match_id = url.split("/")[-2]
-            if not match_id:
-                raise ValueError("Could not extract match identifier from URL")
-
             # ------------------------
             # BUILD API URL
             # ------------------------

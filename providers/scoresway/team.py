@@ -46,36 +46,35 @@ class ScoreswayTeamScraper:
         RuntimeError
             If the extraction process fails.
         """
+        # ------------------------
+        # VALIDATE INPUTS
+        # ------------------------
+        if not isinstance(country_name, str):
+            raise TypeError("country_name must be a string")
 
+        if not isinstance(league_name, str):
+            raise TypeError("league_name must be a string")
+
+        if not isinstance(team_name, str):
+            raise TypeError("team_name must be a string")
+
+        if not isinstance(season, str):
+            raise TypeError("season must be a string")
+
+        if not country_name.strip():
+            raise ValueError("country_name cannot be empty")
+
+        if not league_name.strip():
+            raise ValueError("league_name cannot be empty")
+
+        if not team_name.strip():
+            raise ValueError("team_name cannot be empty")
+
+        if not season.strip():
+            raise ValueError("season cannot be empty")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUTS
-            # ------------------------
-            if not isinstance(country_name, str):
-                raise TypeError("country_name must be a string")
-
-            if not isinstance(league_name, str):
-                raise TypeError("league_name must be a string")
-
-            if not isinstance(team_name, str):
-                raise TypeError("team_name must be a string")
-
-            if not isinstance(season, str):
-                raise TypeError("season must be a string")
-
-            if not country_name.strip():
-                raise ValueError("country_name cannot be empty")
-
-            if not league_name.strip():
-                raise ValueError("league_name cannot be empty")
-
-            if not team_name.strip():
-                raise ValueError("team_name cannot be empty")
-
-            if not season.strip():
-                raise ValueError("season cannot be empty")
-
-            # ------------------------
+            # -----------------------
             # GET LEAGUE FIXTURES
             # ------------------------
             df_fixtures = self.league_service.extract_fixtures(country_name=country_name, league_name=league_name, season=season)
@@ -133,35 +132,34 @@ class ScoreswayTeamScraper:
         RuntimeError
             If the extraction process fails.
         """
+        # ------------------------
+        # VALIDATE INPUTS
+        # ------------------------
+        if not isinstance(country_name, str):
+            raise TypeError("country_name must be a string")
+
+        if not isinstance(league_name, str):
+            raise TypeError("league_name must be a string")
+
+        if not isinstance(team_name, str):
+            raise TypeError("team_name must be a string")
+
+        if not isinstance(season, str):
+            raise TypeError("season must be a string")
+
+        if not country_name.strip():
+            raise ValueError("country_name cannot be empty")
+
+        if not league_name.strip():
+            raise ValueError("league_name cannot be empty")
+
+        if not team_name.strip():
+            raise ValueError("team_name cannot be empty")
+
+        if not season.strip():
+            raise ValueError("season cannot be empty")
 
         try:
-            # ------------------------
-            # VALIDATE INPUTS
-            # ------------------------
-            if not isinstance(country_name, str):
-                raise TypeError("country_name must be a string")
-
-            if not isinstance(league_name, str):
-                raise TypeError("league_name must be a string")
-
-            if not isinstance(team_name, str):
-                raise TypeError("team_name must be a string")
-
-            if not isinstance(season, str):
-                raise TypeError("season must be a string")
-
-            if not country_name.strip():
-                raise ValueError("country_name cannot be empty")
-
-            if not league_name.strip():
-                raise ValueError("league_name cannot be empty")
-
-            if not team_name.strip():
-                raise ValueError("team_name cannot be empty")
-
-            if not season.strip():
-                raise ValueError("season cannot be empty")
-
             # ------------------------
             # GET LEAGUE RESULTS
             # ------------------------
@@ -227,35 +225,34 @@ class ScoreswayTeamScraper:
         RuntimeError
             If the extraction process fails.
         """
+        # ------------------------
+        # VALIDATE INPUTS
+        # ------------------------
+        if not isinstance(country_name, str):
+            raise TypeError("country_name must be a string")
 
+        if not isinstance(league_name, str):
+            raise TypeError("league_name must be a string")
+
+        if not isinstance(team_name, str):
+            raise TypeError("team_name must be a string")
+
+        if not isinstance(season, str):
+            raise TypeError("season must be a string")
+
+        if not country_name.strip():
+            raise ValueError("country_name cannot be empty")
+
+        if not league_name.strip():
+            raise ValueError("league_name cannot be empty")
+
+        if not team_name.strip():
+            raise ValueError("team_name cannot be empty")
+
+        if not season.strip():
+            raise ValueError("season cannot be empty")
+       
         try:
-            # ------------------------
-            # VALIDATE INPUTS
-            # ------------------------
-            if not isinstance(country_name, str):
-                raise TypeError("country_name must be a string")
-
-            if not isinstance(league_name, str):
-                raise TypeError("league_name must be a string")
-
-            if not isinstance(team_name, str):
-                raise TypeError("team_name must be a string")
-
-            if not isinstance(season, str):
-                raise TypeError("season must be a string")
-
-            if not country_name.strip():
-                raise ValueError("country_name cannot be empty")
-
-            if not league_name.strip():
-                raise ValueError("league_name cannot be empty")
-
-            if not team_name.strip():
-                raise ValueError("team_name cannot be empty")
-
-            if not season.strip():
-                raise ValueError("season cannot be empty")
-
             # ------------------------
             # GET SEASON INFORMATION
             # ------------------------
@@ -342,16 +339,16 @@ class ScoreswayTeamScraper:
         except Exception as e:
             raise RuntimeError(f"Failed to extract squad data for team '{team_name}' in league '{league_name}' ({season}): {str(e)}")
         
-    def _get_team_squad_cache( self, country_name: str, league_name: str, team_name: str, season: str ) -> pd.DataFrame:
+    def _get_team_squad_cache( self, country_name: str, league_name: str, team_name_contestant: str, season: str ) -> pd.DataFrame:
 
-        cache_key = f"{country_name}_{league_name}_{team_name}_{season}"
+        cache_key = f"{country_name}_{league_name}_{team_name_contestant}_{season}"
 
         if cache_key not in self._team_squad_cache:
 
-            self._team_squad_cache[cache_key] = self.extract_squad(country_name, league_name, team_name,  season)
+            self._team_squad_cache[cache_key] = self.extract_squad(country_name, league_name, team_name_contestant,  season)
 
         return self._team_squad_cache[cache_key]
         
-    def get_team_squad(self, country_name: str, league_name: str, team_name: str, season: str) -> pd.DataFrame:
+    def get_team_squad(self, country_name: str, league_name: str, team_name_contestant: str, season: str) -> pd.DataFrame:
 
-        return self._get_team_squad_cache( country_name, league_name, team_name, season)
+        return self._get_team_squad_cache( country_name, league_name, team_name_contestant, season)

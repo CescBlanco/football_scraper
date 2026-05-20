@@ -238,23 +238,22 @@ class ScoreswayCompetitionScraper:
         RuntimeError
             If the competitions data cannot be processed.
         """
+        # Validate country_name type
+        if not isinstance(country_name, str):
+            raise TypeError("country_name must be a string")
 
+        # Validate league_name type
+        if not isinstance(league_name, str):
+            raise TypeError("league_name must be a string")
+
+        # Validate empty values
+        if not country_name.strip():
+            raise ValueError("country_name cannot be empty")
+
+        if not league_name.strip():
+            raise ValueError("league_name cannot be empty")
+        
         try:
-            # Validate country_name type
-            if not isinstance(country_name, str):
-                raise TypeError("country_name must be a string")
-
-            # Validate league_name type
-            if not isinstance(league_name, str):
-                raise TypeError("league_name must be a string")
-
-            # Validate empty values
-            if not country_name.strip():
-                raise ValueError("country_name cannot be empty")
-
-            if not league_name.strip():
-                raise ValueError("league_name cannot be empty")
-
             # Load competitions dataset
             df = self._get_competitions_cache()
 

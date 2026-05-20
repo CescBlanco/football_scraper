@@ -43,20 +43,20 @@ class ScoreswayPreMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+        
+        url_parts = url.split('/')
+        if len(url_parts) < 2:
+            raise ValueError("Invalid match URL format")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
-            url_parts = url.split('/')
-            if len(url_parts) < 2:
-                raise ValueError("Invalid match URL format")
-
             match_id = url_parts[-2]
 
             # ------------------------
@@ -140,16 +140,16 @@ class ScoreswayPreMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
             match_id = url.split('/')[-2]
 
             # ------------------------
@@ -236,16 +236,16 @@ class ScoreswayPreMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
             match_id = url.split('/')[-2]
 
             # ------------------------
@@ -319,16 +319,17 @@ class ScoreswayPreMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
+            
             match_id = url.split('/')[-2]
 
             # ------------------------
@@ -409,17 +410,18 @@ class ScoreswayPreMatchScraper:
         RuntimeError
             If the extraction process fails.
         """
+        
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
 
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
+            
             match_id = url.split('/')[-2]
 
             # ------------------------
@@ -503,20 +505,17 @@ class ScoreswayPreMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError( "url cannot be empty")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError(
-                    "url must be a string"
-                )
-
-            if not url.strip():
-                raise ValueError(
-                    "url cannot be empty"
-                )
-
+            
             match_id = url.split('/')[-2]
 
             # ------------------------
@@ -574,16 +573,17 @@ class ScoreswayPreMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url, str):
+            raise TypeError("url must be a string")
+
+        if not url.strip():
+            raise ValueError("url cannot be empty")
+
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url, str):
-                raise TypeError("url must be a string")
-
-            if not url.strip():
-                raise ValueError("url cannot be empty")
-
+            
             match_id = url.split('/')[-2]
 
             # ------------------------
@@ -649,17 +649,18 @@ class ScoreswayPreMatchScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        df_match_details_prematch= self.extract_match_details(url)
+        if not isinstance(df_match_details_prematch, pd.DataFrame):
+            raise TypeError("df_match_details_prematch must be a DataFrame")
+
+        if df_match_details_prematch.empty:
+            raise ValueError("Input DataFrame cannot be empty")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            df_match_details_prematch= self.extract_match_details(url)
-            if not isinstance(df_match_details_prematch, pd.DataFrame):
-                raise TypeError("df_match_details_prematch must be a DataFrame")
-
-            if df_match_details_prematch.empty:
-                raise ValueError("Input DataFrame cannot be empty")
-
+        
             home_id = df_match_details_prematch['id'].values[0]
 
             # ------------------------
@@ -726,19 +727,19 @@ class ScoreswayPreMatchScraper:
         RuntimeError
             If the extraction process fails.
         """
+        
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
 
+        df_match_details_prematch= self.extract_match_details(url)
+        if not isinstance(df_match_details_prematch, pd.DataFrame):
+            raise TypeError( "df_match_details_prematch must be a DataFrame")
+
+        if df_match_details_prematch.empty:
+            raise ValueError("Input DataFrame cannot be empty")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-
-            df_match_details_prematch= self.extract_match_details(url)
-            if not isinstance(df_match_details_prematch, pd.DataFrame):
-                raise TypeError( "df_match_details_prematch must be a DataFrame")
-
-            if df_match_details_prematch.empty:
-                raise ValueError("Input DataFrame cannot be empty")
-
             away_id = df_match_details_prematch['id'].values[1]
 
             # ------------------------

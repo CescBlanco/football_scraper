@@ -52,28 +52,28 @@ class ScoreswayPlayerScraper:
         RuntimeError
             If the extraction process fails.
         """
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url_player, str):
+            raise TypeError("url_player must be a string")
 
+        if not url_player.strip():
+            raise ValueError("url_player cannot be empty")
+
+        # ------------------------
+        # EXTRACT PLAYER ID
+        # ------------------------
+        url_parts = url_player.split('/')
+
+        if len(url_parts) < 2:
+            raise ValueError("Invalid player URL format" )
+
+        player_id = url_parts[-1]
+        if not player_id:
+            raise ValueError("Player ID could not be extracted from the URL")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url_player, str):
-                raise TypeError("url_player must be a string")
-
-            if not url_player.strip():
-                raise ValueError("url_player cannot be empty")
-
-            # ------------------------
-            # EXTRACT PLAYER ID
-            # ------------------------
-            url_parts = url_player.split('/')
-
-            if len(url_parts) < 2:
-                raise ValueError("Invalid player URL format" )
-
-            player_id = url_parts[-1]
-            if not player_id:
-                raise ValueError("Player ID could not be extracted from the URL")
 
             # ------------------------
             # BUILD API URL
@@ -156,27 +156,27 @@ class ScoreswayPlayerScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url_player, str):
+            raise TypeError("url_player must be a string")
+
+        if not url_player.strip():
+            raise ValueError("url_player cannot be empty")
+
+        # ------------------------
+        # EXTRACT PLAYER ID
+        # ------------------------
+        url_parts = url_player.split('/')
+        if len(url_parts) < 2:
+            raise ValueError("Invalid player URL format" )
+
+        player_id = url_parts[-1]
+        if not player_id:
+            raise ValueError("Player ID could not be extracted")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url_player, str):
-                raise TypeError("url_player must be a string")
-
-            if not url_player.strip():
-                raise ValueError("url_player cannot be empty")
-
-            # ------------------------
-            # EXTRACT PLAYER ID
-            # ------------------------
-            url_parts = url_player.split('/')
-            if len(url_parts) < 2:
-                raise ValueError("Invalid player URL format" )
-
-            player_id = url_parts[-1]
-            if not player_id:
-                raise ValueError("Player ID could not be extracted")
-
             # ------------------------
             # BUILD API URL
             # ------------------------
@@ -259,23 +259,25 @@ class ScoreswayPlayerScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url_player, str):
+            raise TypeError("url_player must be a string")
+
+        if not url_player.strip():
+            raise ValueError("url_player cannot be empty")
+
+        # ------------------------
+        # EXTRACT URL IDENTIFIERS
+        # ------------------------
+        url_parts = url_player.split('/')
+
+        if len(url_parts) < 7:
+            raise ValueError( "Invalid player URL format")
+        
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url_player, str):
-                raise TypeError("url_player must be a string")
-
-            if not url_player.strip():
-                raise ValueError("url_player cannot be empty")
-
-            # ------------------------
-            # EXTRACT URL IDENTIFIERS
-            # ------------------------
-            url_parts = url_player.split('/')
-
-            if len(url_parts) < 7:
-                raise ValueError( "Invalid player URL format")
+           
 
             tournament_id = url_parts[-7]
             contestant_id = url_parts[-4]
@@ -359,23 +361,24 @@ class ScoreswayPlayerScraper:
             If the extraction process fails.
         """
 
+        # ------------------------
+        # VALIDATE INPUT
+        # ------------------------
+        if not isinstance(url_player, str):
+            raise TypeError("url_player must be a string")
+
+        if not url_player.strip():
+            raise ValueError("url_player cannot be empty")
+
+        # ------------------------
+        # EXTRACT URL IDENTIFIERS
+        # ------------------------
+        url_parts = url_player.split('/')
+        if len(url_parts) < 7:
+            raise ValueError("Invalid player URL format" )
+
         try:
-            # ------------------------
-            # VALIDATE INPUT
-            # ------------------------
-            if not isinstance(url_player, str):
-                raise TypeError("url_player must be a string")
-
-            if not url_player.strip():
-                raise ValueError("url_player cannot be empty")
-
-            # ------------------------
-            # EXTRACT URL IDENTIFIERS
-            # ------------------------
-            url_parts = url_player.split('/')
-            if len(url_parts) < 7:
-                raise ValueError("Invalid player URL format" )
-
+            
             tournament_id = url_parts[-7]
             contestant_id = url_parts[-4]
 
