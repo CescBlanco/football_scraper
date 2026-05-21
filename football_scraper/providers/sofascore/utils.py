@@ -13,7 +13,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (WebDriverException, TimeoutException,NoSuchElementException)
-from webdriver_manager.chrome import ChromeDriverManager
+
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -56,7 +56,7 @@ def sofascore_requests(url_api: str, timeout: int = 10) -> Dict:
         Exception:
             Generic fallback for unexpected runtime errors.
     """
-
+    from webdriver_manager.chrome import ChromeDriverManager
     driver = None
 
     try:

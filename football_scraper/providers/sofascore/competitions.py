@@ -1,19 +1,6 @@
 import requests
-from bs4 import BeautifulSoup
 import pandas as pd
-import json
-import logging
-from typing import Dict, List, Union, Tuple ,Literal, Any, Optional
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import (WebDriverException, TimeoutException,NoSuchElementException)
-from webdriver_manager.chrome import ChromeDriverManager
-from tqdm import tqdm
 
-from football_scraper.providers.sofascore.constants import DEFAULT_HEADERS, BASE_URL
 from football_scraper.providers.sofascore.utils import sofascore_requests
 
 class SofascoreCompetitionService:
