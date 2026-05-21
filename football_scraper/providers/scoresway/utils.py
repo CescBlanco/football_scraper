@@ -1,7 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+
 
 import pandas as pd
 import re
@@ -13,6 +13,7 @@ from football_scraper.providers.scoresway.constants import DEFAULT_HEADERS
 
 #----------------------------------------------DRIVE SELENIUM---------------------------------------------
 def _create_driver():
+    from webdriver_manager.chrome import ChromeDriverManager
     """
     Create and configure a Selenium Chrome WebDriver instance.
 
