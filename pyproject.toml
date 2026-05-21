@@ -19,9 +19,11 @@ dependencies = [
     "lxml>=6.0.0"
 ]
 
-[project.optional-dependencies]
-selenium = ["selenium>=4.0.0"]
-playwright = ["playwright>=1.40.0"]
+
+optional-dependencies = {
+  selenium = ["selenium>=4.0.0"],
+  playwright = ["playwright>=1.40.0"]
+}
 
 keywords = [
     "football",
@@ -40,6 +42,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-[project.urls]
-Repository = "https://github.com/CescBlanco/football-scraper"
-Issues = "https://github.com/CescBlanco/football-scraper/issues"
+urls = {
+  Repository = "https://github.com/CescBlanco/football-scraper",
+  Issues = "https://github.com/CescBlanco/football-scraper/issues"
+}
