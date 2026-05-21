@@ -12,7 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (NoSuchElementException,TimeoutException, WebDriverException)
-from webdriver_manager.chrome import ChromeDriverManager
+
 from football_scraper.providers.espn.utils import parse_game_info, get_team_name, get_record_points_by_uid, extract_events
 
 class ESPNMatchScraper:
@@ -671,6 +671,7 @@ class ESPNMatchScraper:
                                                                         "team_away","team_away_url","team_away_photo","winner","match_url","date","competition"])
 
     def extract_lineups(self, url: str) -> pd.DataFrame:
+        from webdriver_manager.chrome import ChromeDriverManager
         """
         Extract match lineups including starters, substitutions,
         and unused substitutes.
@@ -881,6 +882,7 @@ class ESPNMatchScraper:
         return pd.DataFrame(rows) if rows else pd.DataFrame(columns=["match_id","team","formation","type","number","name","player_url","events"])
     
     def extract_match_commentary(self, url):
+        from webdriver_manager.chrome import ChromeDriverManager
         # -------------------------
         # CONFIG CHROME
         # -------------------------
@@ -928,6 +930,7 @@ class ESPNMatchScraper:
     
     
     def extract_match_timeline(self, url):
+        from webdriver_manager.chrome import ChromeDriverManager
 
         options = Options()
 
