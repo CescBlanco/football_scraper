@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cesc-football-scraper"
-version = "0.1.8"
+version = "0.1.9"
 description = "Modular Python library for extracting football data from multiple public providers"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -43,7 +43,7 @@ exclude = [   "manual_test_*",   "tests*",   "football_scraper_venv*" ]
 
 [project.optional-dependencies]
 selenium = ["selenium>=4.0.0","webdriver_manager>=4.0.0"]
-playwright = ["playwright>=1.40.0"]
+playwright = ["playwright>=1.40.0", "patchright>=1.0.0"]
 
 [project.urls]
 Repository = "https://github.com/CescBlanco/football-scraper"

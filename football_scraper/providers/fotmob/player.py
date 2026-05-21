@@ -5,7 +5,7 @@ import json
 import time
 import random
 import pandas as pd
-from patchright.async_api import async_playwright
+
 
 COOKIES_FILE = "fotmob_player_cookies.json"
 
@@ -48,6 +48,7 @@ class FotmobPlayerService:
                 raise RuntimeError(f"Mouse simulation failed: {e}")
 
     async def fetch_player_details(self, url):
+        from patchright.async_api import async_playwright
         """
         Fetch detailed player data from a given URL using Playwright.
 

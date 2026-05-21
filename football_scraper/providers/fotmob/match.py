@@ -4,7 +4,7 @@ import os
 import json
 import time
 import pandas as pd
-from patchright.async_api import async_playwright
+
 
 from football_scraper.providers.fotmob.utils import flatten_stats, extract_stats
 
@@ -15,6 +15,7 @@ class FotmobMatchService:
         self.headless = headless
 
     async def fetch_match_json(self, url):
+        from patchright.async_api import async_playwright
         """
         Fetch match details JSON data using Playwright.
 
