@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cesc-football-scraper"
-version = "0.1.4"
+version = "0.1.5"
 description = "Modular Python library for extracting football data from multiple public providers"
 readme = "README.md"
 requires-python = ">=3.10"
