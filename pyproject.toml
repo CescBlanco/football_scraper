@@ -16,7 +16,8 @@ authors = [
 dependencies = [
     "requests>=2.32.0",
     "beautifulsoup4>=4.14.0",
-    "lxml>=6.0.0"
+    "lxml>=6.0.0",
+    "mplsoccer>=1.0.0"
 ]
 
 
