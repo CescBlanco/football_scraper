@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (WebDriverException, TimeoutException,NoSuchElementException)
-from webdriver_manager.chrome import ChromeDriverManager
+
 from tqdm import tqdm
 
 from football_scraper.providers.sofascore.constants import DEFAULT_HEADERS, BASE_URL, BASE_URL_TEAM
@@ -23,6 +23,7 @@ class SofascoreLeagueService:
         self._leagues_cache = None 
 
     def get_all_leagues_from_df(self, df: pd.DataFrame) -> pd.DataFrame:
+        from webdriver_manager.chrome import ChromeDriverManager
         """
         Fetch all football leagues (unique tournaments) from SofaScore API
         for each country/category provided in the input DataFrame.
@@ -567,6 +568,8 @@ class SofascoreLeagueService:
         return df_info, upper_division, lower_division
     
     def extract_team_of_the_week_by_tournament(self, id_league_selected: Union[str, int],id_season_selected: Union[str, int]) -> pd.DataFrame:
+        from webdriver_manager.chrome import ChromeDriverManager
+        
         """
         Extract all 'Team of the Week' players for a given league and season
         from SofaScore API.
@@ -1224,6 +1227,8 @@ class SofascoreLeagueService:
         return df
     
     def extract_all_matches(self, id_league_selected: Union[str, int],id_season_selected: Union[str, int]) -> pd.DataFrame:
+        from webdriver_manager.chrome import ChromeDriverManager
+        
         """
         Extract all matches for a given league and season from SofaScore API.
 
