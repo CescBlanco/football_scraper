@@ -1,4 +1,4 @@
-# Football Scraper
+# Cesc Football Scraper
 
 Modular Python library for extracting football data from multiple public providers, including Understat, Sofascore, Fotmob, Transfermarkt, ESPN, Scoresway and 365Scores.
 
