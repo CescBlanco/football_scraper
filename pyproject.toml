@@ -37,6 +37,14 @@ keywords = [
     "scoresway"
 ]
 
+[tool.setuptools.packages.find]
+include = ["football_scraper*"]
+exclude = [
+  "manual_test_*",
+  "providers.tests*",
+  "football_scraper_venv*"
+]
+
 [project.optional-dependencies]
 selenium = ["selenium>=4.0.0"]
 playwright = ["playwright>=1.40.0"]
