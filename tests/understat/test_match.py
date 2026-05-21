@@ -2,8 +2,8 @@ import pytest
 import pandas as pd
 import requests
 
-from providers.understat.client import UnderstatClient
-from providers.understat.match import UnderstatMatchScraper
+from football_scraper.providers.understat.client import UnderstatClient
+from football_scraper.providers.understat.match import UnderstatMatchScraper
 
 @pytest.fixture
 def client():

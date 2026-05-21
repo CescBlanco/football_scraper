@@ -1,10 +1,10 @@
 import pytest
 import pandas as pd
 
-from providers.fotmob.constants import BASE_URL
-from providers.fotmob.client import FotmobClient
-from providers.fotmob.competitions import FotmobCompetitionService
-from providers.fotmob.league  import FotmobLeagueService
+from football_scraper.providers.fotmob.constants import BASE_URL
+from football_scraper.providers.fotmob.client import FotmobClient
+from football_scraper.providers.fotmob.competitions import FotmobCompetitionService
+from football_scraper.providers.fotmob.league  import FotmobLeagueService
 
 @pytest.fixture
 def client():

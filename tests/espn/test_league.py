@@ -2,8 +2,8 @@ import pytest
 import pandas as pd
 import requests
 
-from providers.espn.competitions import ESPNCompetitionScraper
-from providers.espn.league import ESPNLeagueScraper
+from football_scraper.providers.espn.competitions import ESPNCompetitionScraper
+from football_scraper.providers.espn.league import ESPNLeagueScraper
 
 LEAGUE='Portuguese Primeira Liga'
 

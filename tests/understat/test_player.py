@@ -1,9 +1,9 @@
 import pytest
 import pandas as pd
 
-from providers.understat.client import UnderstatClient
-from providers.understat.team import UnderstatTeamScraper
-from providers.understat.player import UnderstatPlayerScraper
+from football_scraper.providers.understat.client import UnderstatClient
+from football_scraper.providers.understat.team import UnderstatTeamScraper
+from football_scraper.providers.understat.player import UnderstatPlayerScraper
 
 
 @pytest.fixture

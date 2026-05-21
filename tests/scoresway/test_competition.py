@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import requests
 
-from providers.scoresway.competitions import ScoreswayCompetitionScraper
+from football_scraper.providers.scoresway.competitions import ScoreswayCompetitionScraper
 
 
 country_name= 'Spain'

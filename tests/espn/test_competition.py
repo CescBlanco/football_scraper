@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import requests
 
-from providers.espn.competitions import ESPNCompetitionScraper
+from football_scraper.providers.espn.competitions import ESPNCompetitionScraper
 
 @pytest.fixture
 def client():

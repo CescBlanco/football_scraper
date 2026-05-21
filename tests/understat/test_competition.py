@@ -1,8 +1,8 @@
 import pytest
 
-from providers.understat.constants import BASE_URL
-from providers.understat.client import UnderstatClient
-from providers.understat.competitions import UnderstatCompetitionScraper
+from football_scraper.providers.understat.constants import BASE_URL
+from football_scraper.providers.understat.client import UnderstatClient
+from football_scraper.providers.understat.competitions import UnderstatCompetitionScraper
 
 @pytest.fixture
 def client():

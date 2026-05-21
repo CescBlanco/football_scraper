@@ -2,8 +2,8 @@ import pytest
 import asyncio
 import pandas as pd
 
-from providers.fotmob.client import FotmobClient
-from providers.fotmob.match import FotmobMatchService
+from football_scraper.providers.fotmob.client import FotmobClient
+from football_scraper.providers.fotmob.match import FotmobMatchService
 
 
 @pytest.fixture

@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import requests
 
-from providers.scoresway.events_match import ScoreswayEventsMatchScraper
+from football_scraper.providers.scoresway.events_match import ScoreswayEventsMatchScraper
 
 
 url= "https://www.scoresway.com/en_GB/soccer/primera-divisi%C3%B3n-2025-2026/80zg2v1cuqcfhphn56u4qpyqc/match/view/3rpa9gg887sphjnou8h1uv6s4/match-summary"

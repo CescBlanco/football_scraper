@@ -2,8 +2,8 @@ import pytest
 import pandas as pd
 import requests
 
-from providers.scoresway.player import ScoreswayPlayerScraper
-from providers.scoresway.team import ScoreswayTeamScraper
+from football_scraper.providers.scoresway.player import ScoreswayPlayerScraper
+from football_scraper.providers.scoresway.team import ScoreswayTeamScraper
 
 url= 'https://www.scoresway.com/en_GB/soccer/primera-divisi%C3%B3n-2025-2026/80zg2v1cuqcfhphn56u4qpyqc/teams/view/agh9ifb2mw3ivjusgedj7c3fe/player/view/2wl6h1rlrfnn2mr65vuo3t815'
 

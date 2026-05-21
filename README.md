@@ -20,13 +20,13 @@ Provides structured access to match data, player statistics, teams, competitions
 # Installation
 
 ```bash
-pip install football-scraper
+pip install cesc-football-scraper
 ```
 
 To update to the latest version:
 
 ```bash
-pip install --upgrade football-scraper
+pip install --upgrade cesc-football-scraper
 ```
 
 ---

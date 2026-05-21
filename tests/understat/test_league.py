@@ -1,10 +1,10 @@
 import pytest
 import pandas as pd
 
-from providers.understat.constants import BASE_URL
-from providers.understat.client import UnderstatClient
-from providers.understat.competitions import UnderstatCompetitionScraper
-from providers.understat.league  import UnderstatLeagueScraper
+from football_scraper.providers.understat.constants import BASE_URL
+from football_scraper.providers.understat.client import UnderstatClient
+from football_scraper.providers.understat.competitions import UnderstatCompetitionScraper
+from football_scraper.providers.understat.league  import UnderstatLeagueScraper
 
 @pytest.fixture
 def client():

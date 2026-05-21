@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
-from providers.three_sixty_five_scores.client import Scores365Client
-from providers.three_sixty_five_scores.constants import COMPETITIONS_URL
+from football_scraper.providers.three_sixty_five_scores.client import Scores365Client
+from football_scraper.providers.three_sixty_five_scores.constants import COMPETITIONS_URL
 
 @pytest.fixture
 def client():

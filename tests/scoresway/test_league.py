@@ -2,8 +2,8 @@ import pytest
 import pandas as pd
 import requests
 
-from providers.scoresway.competitions import ScoreswayCompetitionScraper
-from providers.scoresway.league import ScoreswayLeagueScraper
+from football_scraper.providers.scoresway.competitions import ScoreswayCompetitionScraper
+from football_scraper.providers.scoresway.league import ScoreswayLeagueScraper
 
 country_name= 'Spain'
 league_name= 'Primera División'

@@ -1,9 +1,9 @@
 import pytest
 import pandas as pd
 
-from providers.sofascore.constants import BASE_URL
-from providers.sofascore.client import SofascoreClient
-from providers.sofascore.match import SofascoreMatchScraper
+from football_scraper.providers.sofascore.constants import BASE_URL
+from football_scraper.providers.sofascore.client import SofascoreClient
+from football_scraper.providers.sofascore.match import SofascoreMatchScraper
 
 @pytest.fixture
 def client():

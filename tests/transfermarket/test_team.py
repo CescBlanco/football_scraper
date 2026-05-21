@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
-from providers.transfermarkt.client import TransfermarktClient
-from providers.transfermarkt.constants import COMPETITIONS_URL
+from football_scraper.providers.transfermarkt.client import TransfermarktClient
+from football_scraper.providers.transfermarkt.constants import COMPETITIONS_URL
 
 @pytest.fixture
 def client():

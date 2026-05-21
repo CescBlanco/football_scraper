@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from providers.transfermarkt.client import TransfermarktClient
+from football_scraper.providers.transfermarkt.client import TransfermarktClient
 
 
 
